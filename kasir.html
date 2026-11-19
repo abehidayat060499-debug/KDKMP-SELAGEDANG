@@ -1,0 +1,3421 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#107C41" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Kasir Kuota Sembako — KDKMP Selagedang</title>
+  <!-- Offline-capable QR & OCR libraries (graceful fallback if offline) -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    :root {
+      --excel-green: #107C41;
+      --excel-green-dark: #0B5A2F;
+      --excel-green-light: #E8F5EE;
+      --excel-green-mid: #C6E7D4;
+      --excel-border: #D0D7DE;
+      --excel-grid: #E2E8F0;
+      --bg-app: #F1F5F9;
+      --bg-card: #FFFFFF;
+      --text-main: #0F172A;
+      --text-muted: #475569;
+      --text-light: #64748B;
+      --danger: #DC2626;
+      --danger-bg: #FEF2F2;
+      --danger-border: #FECACA;
+      --warn: #D97706;
+      --warn-bg: #FFFBEB;
+      --warn-border: #FDE68A;
+      --info: #0284C7;
+      --info-bg: #F0F9FF;
+      --info-border: #BAE6FD;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.10);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top: env(safe-area-inset-top, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-app);
+      color: var(--text-main);
+      font-size: 14px;
+      line-height: 1.4;
+      overflow-x: hidden;
+    }
+
+    /* ================= EXCEL TOP RIBBON / HEADER ================= */
+    .top-ribbon {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--excel-green);
+      color: #FFFFFF;
+      padding: calc(8px + var(--safe-top)) 12px 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+    }
+
+    .brand-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .excel-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 7px;
+      background: #FFFFFF;
+      color: var(--excel-green);
+      font-weight: 900;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.1px;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      opacity: 0.9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ribbon-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .ribbon-pill {
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      color: #FFFFFF;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .dot-live {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ADE80;
+      box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3);
+    }
+
+    .btn-ribbon {
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      color: #FFFFFF;
+      border-radius: 7px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-height: 34px;
+    }
+
+    .btn-ribbon:active {
+      background: rgba(255, 255, 255, 0.28);
+    }
+
+    /* ================= FORMULA BAR (EXCEL STYLE) ================= */
+    .formula-bar {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--excel-border);
+      padding: 5px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .fx-badge {
+      background: #F1F5F9;
+      border: 1px solid var(--excel-border);
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 700;
+      color: var(--excel-green);
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .formula-text {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #334155;
+    }
+
+    /* ================= DESKTOP/TABLET SHEET TABS ================= */
+    .sheet-tabs-bar {
+      background: #E2E8F0;
+      border-bottom: 1px solid var(--excel-border);
+      padding: 6px 12px 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .sheet-tabs {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .sheet-tab {
+      background: #CBD5E1;
+      color: #334155;
+      border: 1px solid var(--excel-border);
+      border-bottom: none;
+      border-radius: 7px 7px 0 0;
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sheet-tab.active {
+      background: #FFFFFF;
+      color: var(--excel-green);
+      border-top: 3px solid var(--excel-green);
+      padding-top: 5px;
+    }
+
+    .sheet-quick-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-bottom: 5px;
+    }
+
+    /* ================= MAIN CONTAINER ================= */
+    .main-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    /* Split Screen on Tablet/Desktop (>= 900px) */
+    .pos-grid {
+      display: grid;
+      grid-template-columns: 410px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    /* ================= CARDS & PANELS ================= */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--excel-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: #F8FAFC;
+      border-bottom: 1px solid var(--excel-border);
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-body {
+      padding: 12px;
+    }
+
+    /* ================= SEARCH & SCAN CONTROLS ================= */
+    .scan-hero-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .btn-scan-primary {
+      background: linear-gradient(135deg, #107C41 0%, #0B5A2F 100%);
+      color: #FFFFFF;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      box-shadow: 0 2px 6px rgba(16, 124, 65, 0.25);
+    }
+
+    .btn-scan-primary:active {
+      transform: scale(0.99);
+    }
+
+    .btn-paste {
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border: 1px solid #BFDBFE;
+      border-radius: var(--radius-md);
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .btn-paste:active {
+      background: #DBEAFE;
+    }
+
+    .search-box-wrap {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 48px;
+      padding: 10px 76px 10px 12px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      border: 2px solid var(--excel-green);
+      border-radius: var(--radius-md);
+      background: #FFFFFF;
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .search-input::placeholder {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: #94A3B8;
+    }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #F1F5F9;
+      border: 1px solid var(--excel-border);
+      color: #475569;
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .digit-counter-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .badge-digit {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #F1F5F9;
+      color: #334155;
+    }
+
+    .badge-digit.ok {
+      background: var(--excel-green-light);
+      color: var(--excel-green);
+    }
+
+    /* ================= TOUCH NUMPAD ================= */
+    .numpad-toggle-mobile {
+      display: none;
+      width: 100%;
+      background: #F8FAFC;
+      border: 1px solid var(--excel-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+      margin-bottom: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .numpad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .num-key {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      min-height: 46px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      box-shadow: 0 1px 0 #CBD5E1;
+    }
+
+    .num-key:active {
+      background: var(--excel-green-light);
+      border-color: var(--excel-green);
+      transform: translateY(1px);
+    }
+
+    .num-key.key-del {
+      background: #FEF2F2;
+      color: #B91C1C;
+      border-color: #FECACA;
+      font-size: 14px;
+    }
+
+    .num-key.key-clr {
+      background: #FFFBEB;
+      color: #B45309;
+      border-color: #FDE68A;
+      font-size: 13px;
+    }
+
+    /* ================= SEARCH SUGGESTIONS DROPDOWN ================= */
+    .search-results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .search-hit-item {
+      border: 1px solid var(--excel-border);
+      background: #F8FAFC;
+      border-radius: 8px;
+      padding: 9px 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .search-hit-item:hover, .search-hit-item:active {
+      border-color: var(--excel-green);
+      background: var(--excel-green-light);
+    }
+
+    /* ================= CITIZEN PROFILE & TWO-WAY REGISTRATION ================= */
+    .profile-box {
+      border: 1.5px solid var(--excel-green);
+      background: #F8FAFC;
+      border-radius: var(--radius-md);
+      padding: 11px;
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .citizen-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .status-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .tag {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tag-green {
+      background: var(--excel-green-light);
+      color: var(--excel-green-dark);
+      border: 1px solid var(--excel-green-mid);
+    }
+
+    .tag-warn {
+      background: var(--warn-bg);
+      color: #92400E;
+      border: 1px solid var(--warn-border);
+    }
+
+    .tag-info {
+      background: var(--info-bg);
+      color: #075985;
+      border: 1px solid var(--info-border);
+    }
+
+    .id-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .id-cell {
+      background: #FFFFFF;
+      border: 1px solid var(--excel-border);
+      border-radius: 7px;
+      padding: 6px 8px;
+    }
+
+    .id-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+
+    .id-val {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+
+    .inline-complete-box {
+      background: #FFFBEB;
+      border: 1px dashed #F59E0B;
+      border-radius: 8px;
+      padding: 9px;
+      margin-top: 8px;
+    }
+
+    .inline-complete-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #92400E;
+      margin-bottom: 6px;
+    }
+
+    .inline-input-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      min-height: 42px;
+      padding: 8px 10px;
+      border: 1px solid #CBD5E1;
+      border-radius: 7px;
+      font-size: 14px;
+      background: #FFFFFF;
+      color: var(--text-main);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--excel-green);
+      box-shadow: 0 0 0 2px rgba(16, 124, 65, 0.15);
+    }
+
+    .mono-input {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 700;
+    }
+
+    /* Two-way Registration Box */
+    .reg-box {
+      background: #F0FDF4;
+      border: 1.5px solid #86EFAC;
+      border-radius: var(--radius-md);
+      padding: 11px;
+    }
+
+    .reg-switch-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .reg-type-btn {
+      padding: 8px 6px;
+      border-radius: 7px;
+      border: 1.5px solid #CBD5E1;
+      background: #FFFFFF;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .reg-type-btn.active {
+      border-color: var(--excel-green);
+      background: var(--excel-green);
+      color: #FFFFFF;
+    }
+
+    .form-group {
+      margin-bottom: 8px;
+    }
+
+    .form-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 3px;
+    }
+
+    /* ================= STICKY MOBILE CITIZEN BANNER ================= */
+    .mobile-sticky-citizen {
+      display: none;
+    }
+
+    /* ================= RIGHT PANEL: DATE BAR & COMMODITIES ================= */
+    .date-toolbar {
+      background: #FFFFFF;
+      border: 1px solid var(--excel-border);
+      border-radius: var(--radius-md);
+      padding: 9px 12px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .date-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .date-pill-btn {
+      min-height: 36px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #CBD5E1;
+      background: #F8FAFC;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .date-pill-btn.active {
+      background: var(--excel-green);
+      color: #FFFFFF;
+      border-color: var(--excel-green);
+    }
+
+    .date-pill-btn.yesterday-active {
+      background: #D97706;
+      color: #FFFFFF;
+      border-color: #B45309;
+    }
+
+    .date-input-compact {
+      min-height: 36px;
+      padding: 4px 8px;
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      background: #FFFFFF;
+    }
+
+    .commodities-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .item-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--excel-border);
+      border-radius: var(--radius-md);
+      padding: 13px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.15s ease;
+    }
+
+    .item-card.eligible {
+      border-color: #86EFAC;
+    }
+
+    .item-card.exhausted {
+      border-color: var(--danger-border);
+      background: #FFFDFD;
+    }
+
+    .item-card.locked {
+      border-color: var(--warn-border);
+      background: #FFFDF7;
+    }
+
+    .item-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .item-icon {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .item-rule-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #F1F5F9;
+      color: #475569;
+    }
+
+    .item-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin: 0 0 2px 0;
+    }
+
+    .item-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .quota-meter {
+      background: #F8FAFC;
+      border: 1px solid var(--excel-grid);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+    }
+
+    .quota-numbers {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .quota-rem {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--excel-green);
+    }
+
+    .quota-rem.zero {
+      color: var(--danger);
+    }
+
+    .quota-rem.muted {
+      color: var(--text-light);
+    }
+
+    .progress-track {
+      height: 7px;
+      background: #E2E8F0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--excel-green);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .progress-fill.full {
+      background: var(--danger);
+    }
+
+    .sphp-stepper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #F1F5F9;
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 8px;
+    }
+
+    .step-btn {
+      width: 40px;
+      height: 38px;
+      border-radius: 6px;
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .step-btn:active {
+      background: var(--excel-green-light);
+    }
+
+    .step-val {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .btn-tx {
+      width: 100%;
+      min-height: 48px;
+      border-radius: 9px;
+      border: none;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 12px;
+    }
+
+    .btn-tx-ready {
+      background: var(--excel-green);
+      color: #FFFFFF;
+      box-shadow: 0 2px 5px rgba(16, 124, 65, 0.25);
+    }
+
+    .btn-tx-ready:active {
+      background: var(--excel-green-dark);
+      transform: scale(0.99);
+    }
+
+    .btn-tx-locked {
+      background: var(--warn-bg);
+      color: #92400E;
+      border: 1px solid var(--warn-border);
+      cursor: pointer;
+    }
+
+    .btn-tx-disabled {
+      background: #E2E8F0;
+      color: #64748B;
+      cursor: not-allowed;
+    }
+
+    /* ================= BUTTONS UTILITY ================= */
+    .btn {
+      min-height: 40px;
+      padding: 8px 13px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-green {
+      background: var(--excel-green);
+      color: #FFFFFF;
+    }
+
+    .btn-green:active {
+      background: var(--excel-green-dark);
+    }
+
+    .btn-outline {
+      background: #FFFFFF;
+      border-color: #CBD5E1;
+      color: #334155;
+    }
+
+    .btn-outline:active {
+      background: #F1F5F9;
+    }
+
+    .btn-warn {
+      background: #D97706;
+      color: #FFFFFF;
+    }
+
+    .btn-danger-outline {
+      background: #FEF2F2;
+      border-color: #FECACA;
+      color: #DC2626;
+    }
+
+    .btn-sm {
+      min-height: 34px;
+      padding: 5px 10px;
+      font-size: 11.5px;
+    }
+
+    /* ================= TABLES & DATABASE SHEET ================= */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat-box {
+      background: #FFFFFF;
+      border: 1px solid var(--excel-border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .stat-num {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--excel-green);
+      margin-top: 2px;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--excel-border);
+      border-radius: 8px;
+      background: #FFFFFF;
+    }
+
+    table.excel-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+
+    table.excel-table th {
+      background: #F1F5F9;
+      color: #1E293B;
+      font-weight: 700;
+      text-align: left;
+      padding: 9px 10px;
+      border-bottom: 1.5px solid #CBD5E1;
+      border-right: 1px solid var(--excel-grid);
+      white-space: nowrap;
+    }
+
+    table.excel-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--excel-grid);
+      border-right: 1px solid var(--excel-grid);
+      vertical-align: middle;
+    }
+
+    table.excel-table tr:nth-child(even) td {
+      background: #FAFBFD;
+    }
+
+    .filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .filter-chip {
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+    }
+
+    .filter-chip.active {
+      background: var(--excel-green);
+      color: #FFFFFF;
+      border-color: var(--excel-green);
+    }
+
+    /* ================= MOBILE BOTTOM NAVIGATION BAR ================= */
+    .mobile-bottom-nav {
+      display: none;
+    }
+
+    /* ================= MODAL (CAMERA SCANNER & QR CARD) ================= */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.78);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #FFFFFF;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 560px;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      background: var(--excel-green);
+      color: #FFFFFF;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .modal-close {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #FFFFFF;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .scanner-mode-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 10px 12px 0 12px;
+    }
+
+    .scan-mode-btn {
+      padding: 9px 8px;
+      border-radius: 8px;
+      border: 1.5px solid #CBD5E1;
+      background: #F8FAFC;
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .scan-mode-btn.active {
+      background: var(--excel-green-light);
+      border-color: var(--excel-green);
+      color: var(--excel-green-dark);
+    }
+
+    .viewfinder-box {
+      position: relative;
+      margin: 10px 12px;
+      background: #090D16;
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 4 / 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .viewfinder-box video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Target ROI box for 16-digit NIK / No. KK */
+    .roi-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .roi-target {
+      width: 88%;
+      height: 24%;
+      min-height: 54px;
+      border: 3px solid #4ADE80;
+      border-radius: 10px;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+      position: relative;
+    }
+
+    .roi-target.full-mode {
+      width: 90%;
+      height: 76%;
+      border-color: #38BDF8;
+    }
+
+    .roi-label {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(16, 124, 65, 0.92);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .scanner-controls {
+      padding: 0 12px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .scanner-sub-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .detected-chips {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .detected-num-btn {
+      width: 100%;
+      min-height: 48px;
+      background: #ECFDF5;
+      border: 2px solid var(--excel-green);
+      color: var(--excel-green-dark);
+      border-radius: 9px;
+      padding: 8px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ================= TOAST NOTIFICATION ================= */
+    .toast-container {
+      position: fixed;
+      top: 64px;
+      right: 12px;
+      left: 12px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      max-width: 460px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      pointer-events: auto;
+      border-left: 4px solid #4ADE80;
+    }
+
+    .toast.error {
+      border-left-color: #F87171;
+      background: #7F1D1D;
+    }
+
+    .toast.warn {
+      border-left-color: #FBBF24;
+      background: #78350F;
+    }
+
+    /* ================= MOBILE (HP) RESPONSIVE BREAKPOINT (< 900px) ================= */
+    @media (max-width: 899px) {
+      body {
+        padding-bottom: calc(74px + var(--safe-bottom));
+      }
+
+      .formula-bar,
+      .sheet-tabs-bar {
+        display: none;
+      }
+
+      .brand-title {
+        font-size: 13.5px;
+      }
+
+      .brand-sub {
+        font-size: 10.5px;
+      }
+
+      .hide-on-mobile {
+        display: none !important;
+      }
+
+      .main-wrap {
+        padding: 10px;
+      }
+
+      .pos-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .numpad-toggle-mobile {
+        display: flex;
+      }
+
+      .numpad-grid.collapsed-mobile {
+        display: none;
+      }
+
+      .commodities-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .stats-strip {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      /* Sticky active citizen summary bar when scrolling down to items on HP */
+      .mobile-sticky-citizen.visible {
+        display: flex;
+        position: sticky;
+        top: calc(50px + var(--safe-top));
+        z-index: 40;
+        background: #ECFDF5;
+        border: 1.5px solid var(--excel-green);
+        border-radius: 10px;
+        padding: 8px 10px;
+        margin-bottom: 10px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        box-shadow: var(--shadow-md);
+      }
+
+      /* Mobile Bottom Navigation Bar */
+      .mobile-bottom-nav {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 90;
+        background: #FFFFFF;
+        border-top: 1px solid var(--excel-border);
+        padding: 6px 4px calc(6px + var(--safe-bottom)) 4px;
+        box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.08);
+      }
+
+      .bnav-btn {
+        background: none;
+        border: none;
+        padding: 4px 2px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        color: #64748B;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        border-radius: 8px;
+      }
+
+      .bnav-btn.active {
+        color: var(--excel-green);
+        background: var(--excel-green-light);
+      }
+
+      .bnav-icon {
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      /* Fullscreen camera modal on mobile phone */
+      .modal-backdrop {
+        padding: 0;
+      }
+
+      .modal-card.mobile-full-modal {
+        max-width: 100%;
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+      }
+
+      .viewfinder-box {
+        aspect-ratio: 16 / 11;
+      }
+
+      /* Mobile card view for Database & History rows */
+      .mobile-card-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP EXCEL RIBBON -->
+  <header class="top-ribbon">
+    <div class="brand-area">
+      <div class="excel-icon">X</div>
+      <div class="brand-text">
+        <div class="brand-title">Kasir_Kuota_KDKMP.xlsx</div>
+        <div class="brand-sub">KDKMP Selagedang • POS HP &amp; Tablet</div>
+      </div>
+    </div>
+    <div class="ribbon-actions">
+      <span class="ribbon-pill" title="Sinkronisasi Tab Aktif">
+        <span class="dot-live"></span>
+        <span id="clockBadge">Offline Ready</span>
+      </span>
+      <button type="button" class="btn-ribbon" onclick="toggleFullscreen()" title="Layar Penuh">
+        <span>⛶</span><span class="hide-on-mobile">Layar Penuh</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- EXCEL FORMULA BAR (TABLET/DESKTOP) -->
+  <div class="formula-bar">
+    <span class="fx-badge">fx</span>
+    <span class="formula-text" id="formulaStatus">
+      =CEK_KUOTA(Minyak:"1L/Hari/NIK"; Gas_3kg:"1Tbg/Minggu/KK"; Beras_SPHP:"5Pack/Minggu/KK")
+    </span>
+  </div>
+
+  <!-- DESKTOP/TABLET EXCEL SHEET TABS -->
+  <div class="sheet-tabs-bar">
+    <div class="sheet-tabs">
+      <button type="button" class="sheet-tab active" id="tabBtnPos" onclick="switchView('pos')">
+        <span>📊</span> Kasir_POS
+      </button>
+      <button type="button" class="sheet-tab" id="tabBtnDb" onclick="switchView('db')">
+        <span>🗂️</span> Database_&amp;_Riwayat (<span id="tabDbCount">0</span>)
+      </button>
+    </div>
+    <div class="sheet-quick-actions">
+      <button type="button" class="btn btn-outline btn-sm" onclick="exportCSV()">📥 Export .CSV</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="backupJSON()">💾 Backup JSON</button>
+      <label class="btn btn-outline btn-sm" style="margin:0; cursor:pointer;">
+        📂 Pulihkan
+        <input type="file" accept=".json" style="display:none" onchange="restoreJSON(event)" />
+      </label>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="main-wrap">
+
+    <!-- ==================== VIEW 1: KASIR POS ==================== -->
+    <section id="viewPos">
+
+      <!-- Sticky Mobile Citizen Banner (Visible on HP when citizen selected) -->
+      <div class="mobile-sticky-citizen" id="mobileStickyCitizen">
+        <div style="min-width:0;">
+          <div style="font-weight:800; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="stickyName">-</div>
+          <div style="font-size:11px; color:#065F46; font-family:monospace;" id="stickyIds">-</div>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="resetSearchFocus()">Ganti Warga</button>
+      </div>
+
+      <div class="pos-grid">
+        <!-- LEFT PANEL: SEARCH, SCAN, NUMPAD & CITIZEN PROFILE / REGISTRATION -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔍 Cek NIK / No. KK / Nama Warga</div>
+            <span class="badge-digit" id="digitCounter">0 / 16 digit</span>
+          </div>
+          <div class="card-body">
+
+            <!-- Scan & Paste Hero Buttons -->
+            <div class="scan-hero-row">
+              <button type="button" class="btn-scan-primary" onclick="openScannerModal()">
+                <span style="font-size:18px;">📷</span>
+                <span>Scan KTP / KK / QR</span>
+              </button>
+              <button type="button" class="btn-paste" onclick="pasteFromClipboard()">
+                <span>📋</span> Tempel
+              </button>
+            </div>
+
+            <!-- Search Input -->
+            <div class="search-box-wrap">
+              <input
+                type="text"
+                id="searchInput"
+                class="search-input"
+                inputmode="search"
+                autocomplete="off"
+                placeholder="Ketik 16 digit NIK / KK atau Nama..."
+                oninput="handleSearchInput()"
+              />
+              <button type="button" class="search-clear-btn" onclick="clearSearch()">Hapus</button>
+            </div>
+
+            <div class="digit-counter-row">
+              <span id="searchHintText">Masukkan 16 digit NIK atau No. KK</span>
+              <span id="detectedIdTypeBadge" style="font-weight:700; color:var(--excel-green);"></span>
+            </div>
+
+            <!-- Mobile Collapsible Numpad Toggle -->
+            <button type="button" class="numpad-toggle-mobile" id="numpadToggleBtn" onclick="toggleMobileNumpad()">
+              <span>🔢 Keypad Angka Sentuh (0–9)</span>
+              <span id="numpadToggleLabel">Sembunyikan ▲</span>
+            </button>
+
+            <!-- Touch Numpad -->
+            <div class="numpad-grid" id="numpadGrid">
+              <button type="button" class="num-key" onclick="appendDigit('1')">1</button>
+              <button type="button" class="num-key" onclick="appendDigit('2')">2</button>
+              <button type="button" class="num-key" onclick="appendDigit('3')">3</button>
+              <button type="button" class="num-key" onclick="appendDigit('4')">4</button>
+              <button type="button" class="num-key" onclick="appendDigit('5')">5</button>
+              <button type="button" class="num-key" onclick="appendDigit('6')">6</button>
+              <button type="button" class="num-key" onclick="appendDigit('7')">7</button>
+              <button type="button" class="num-key" onclick="appendDigit('8')">8</button>
+              <button type="button" class="num-key" onclick="appendDigit('9')">9</button>
+              <button type="button" class="num-key key-clr" onclick="clearSearch()">RESET</button>
+              <button type="button" class="num-key" onclick="appendDigit('0')">0</button>
+              <button type="button" class="num-key key-del" onclick="backspaceDigit()">⌫ HAPUS</button>
+            </div>
+
+            <!-- Matching Citizens List (for partial search / name search) -->
+            <div class="search-results-list" id="searchSuggestions"></div>
+
+            <!-- Dynamic Area: Citizen Profile OR New Two-Way Registration Form -->
+            <div id="citizenPanelContainer"></div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL: DATE SELECTOR, 3 COMMODITIES & RECENT LOG -->
+        <div>
+          <!-- Date & Mode Bar -->
+          <div class="date-toolbar">
+            <div class="date-pills">
+              <button type="button" class="date-pill-btn active" id="btnDateToday" onclick="setTxDatePreset('today')">
+                📅 Hari Ini
+              </button>
+              <button type="button" class="date-pill-btn" id="btnDateYesterday" onclick="setTxDatePreset('yesterday')">
+                ⏪ Kemarin
+              </button>
+              <input type="date" id="txDateInput" class="date-input-compact" onchange="onManualDateChange()" />
+            </div>
+            <div style="font-size:11.5px; font-weight:700; color:var(--text-muted);" id="activePeriodInfo">
+              Periode aktif: Hari ini
+            </div>
+          </div>
+
+          <!-- 3 Commodity Cards -->
+          <div class="commodities-grid" id="commoditiesContainer">
+            <!-- Rendered dynamically by JS -->
+          </div>
+
+          <!-- Today's / Selected Date Recent Transactions -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🧾 Riwayat Transaksi (<span id="recentDateLabel">Hari Ini</span>)</div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="switchView('db')">Lihat Semua →</button>
+            </div>
+            <div class="card-body" id="recentTxContainer">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: DATABASE & RIWAYAT ==================== -->
+    <section id="viewDb" style="display:none;">
+      <!-- Summary KPI Strip -->
+      <div class="stats-strip">
+        <div class="stat-box">
+          <div class="stat-label">Total Warga / KK</div>
+          <div class="stat-num" id="statCitizens">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Minyak Hari Ini</div>
+          <div class="stat-num" id="statOilToday">0 L</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Gas 3kg Minggu Ini</div>
+          <div class="stat-num" id="statGasWeek">0 Tbg</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Beras SPHP Minggu Ini</div>
+          <div class="stat-num" id="statRiceWeek">0 Pack</div>
+        </div>
+      </div>
+
+      <!-- Quick Batch Entry for Yesterday's SPHP (No. KK Only) -->
+      <div class="card" style="margin-bottom:12px; border-color:#FCD34D;">
+        <div class="card-header" style="background:#FFFBEB;">
+          <div class="card-title" style="color:#92400E;">⏪ Input Cepat Susulan SPHP Kemarin (Cukup Nama &amp; No. KK)</div>
+        </div>
+        <div class="card-body">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:8px; align-items:end;">
+            <div>
+              <label class="form-label"><span>No. KK (16 Digit)</span><span id="batchKkLen" style="color:#B45309;">0/16</span></label>
+              <input type="tel" maxlength="16" id="batchSphpKk" class="form-input mono-input" placeholder="3203xxxxxxxxxxxx" oninput="checkBatchSphpKk()" />
+            </div>
+            <div>
+              <label class="form-label"><span>Nama Kepala Keluarga / Pembeli</span></label>
+              <input type="text" id="batchSphpName" class="form-input" placeholder="Nama warga..." />
+            </div>
+            <div>
+              <label class="form-label"><span>Jumlah Beras SPHP</span><span id="batchSphpQuotaHint" style="color:var(--excel-green);">Sisa: 5 Pack</span></label>
+              <select id="batchSphpQty" class="form-input">
+                <option value="1">1 Pack (5 kg)</option>
+                <option value="2">2 Pack (10 kg)</option>
+                <option value="3">3 Pack (15 kg)</option>
+                <option value="4">4 Pack (20 kg)</option>
+                <option value="5">5 Pack (25 kg - Maks)</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label"><span>Tanggal Transaksi</span></label>
+              <input type="date" id="batchSphpDate" class="form-input" />
+            </div>
+            <div>
+              <button type="button" class="btn btn-warn" style="width:100%; min-height:42px;" onclick="submitBatchSphp()">
+                + Simpan Susulan SPHP
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Backup & Export Card (Especially handy on HP) -->
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-header">
+          <div class="card-title">💾 Export Laporan &amp; Cadangan Data Offline</div>
+        </div>
+        <div class="card-body" style="display:flex; flex-wrap:wrap; gap:8px;">
+          <button type="button" class="btn btn-green" onclick="exportCSV()">📥 Download Rekap Excel (.CSV)</button>
+          <button type="button" class="btn btn-outline" onclick="backupJSON()">💾 Simpan Cadangan (.JSON)</button>
+          <label class="btn btn-outline" style="margin:0; cursor:pointer;">
+            📂 Pulihkan dari File (.JSON)
+            <input type="file" accept=".json" style="display:none" onchange="restoreJSON(event)" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Citizen Database Card -->
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-header">
+          <div class="card-title">👥 Database Warga Terdaftar</div>
+          <input type="text" id="dbSearchInput" class="form-input" style="max-width:220px; min-height:36px; font-size:12.5px;" placeholder="Cari nama / NIK / KK..." oninput="renderDatabaseTab()" />
+        </div>
+        <div class="card-body">
+          <div class="filter-pills">
+            <button type="button" class="filter-chip active" id="fltAll" onclick="setDbFilter('all')">Semua Data</button>
+            <button type="button" class="filter-chip" id="fltNoKk" onclick="setDbFilter('missing_kk')">⚠️ Belum Ada No. KK</button>
+            <button type="button" class="filter-chip" id="fltNoNik" onclick="setDbFilter('missing_nik')">⚠️ Belum Ada NIK</button>
+            <button type="button" class="filter-chip" id="fltComplete" onclick="setDbFilter('complete')">✅ Data Lengkap</button>
+          </div>
+          <div id="citizenTableContainer"></div>
+        </div>
+      </div>
+
+      <!-- Full Transaction History Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📜 Seluruh Riwayat Pengambilan Sembako</div>
+        </div>
+        <div class="card-body" id="fullTxTableContainer"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MOBILE BOTTOM NAVIGATION BAR (< 900px) -->
+  <nav class="mobile-bottom-nav" aria-label="Navigasi Utama HP">
+    <button type="button" class="bnav-btn active" id="bnavPos" onclick="switchView('pos')">
+      <span class="bnav-icon">🧾</span>
+      <span>Kasir POS</span>
+    </button>
+    <button type="button" class="bnav-btn" onclick="openScannerModal()">
+      <span class="bnav-icon">📷</span>
+      <span>Scan KTP/QR</span>
+    </button>
+    <button type="button" class="bnav-btn" id="bnavDb" onclick="switchView('db')">
+      <span class="bnav-icon">🗂️</span>
+      <span>Database</span>
+    </button>
+    <button type="button" class="bnav-btn" onclick="exportCSV()">
+      <span class="bnav-icon">📥</span>
+      <span>Export CSV</span>
+    </button>
+  </nav>
+
+  <!-- ==================== MODAL 1: LIVE CAMERA SCANNER (QR & OCR) ==================== -->
+  <div class="modal-backdrop" id="scannerModal">
+    <div class="modal-card mobile-full-modal">
+      <div class="modal-header">
+        <div style="font-weight:800; font-size:14px;">📷 Pemindai Kamera (QR Warga &amp; 16 Digit KTP/KK)</div>
+        <button type="button" class="modal-close" onclick="closeScannerModal()">✕</button>
+      </div>
+
+      <div class="scanner-mode-tabs">
+        <button type="button" class="scan-mode-btn active" id="btnScanModeLine" onclick="setScanMode('line')">
+          🎯 Bidik 1 Baris NIK/KK (Cepat)
+        </button>
+        <button type="button" class="scan-mode-btn" id="btnScanModeFull" onclick="setScanMode('full')">
+          📄 Full Frame (Seluruh KK)
+        </button>
+      </div>
+
+      <div class="viewfinder-box">
+        <video id="cameraVideo" autoplay playsinline muted></video>
+        <div class="roi-overlay">
+          <div class="roi-target" id="roiTargetBox">
+            <div class="roi-label" id="roiLabelText">Posisikan 16 digit NIK / No. KK di kotak hijau</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scanner-controls">
+        <div id="scanStatusBanner" style="font-size:12px; font-weight:700; text-align:center; padding:6px 10px; border-radius:7px; background:#F1F5F9; color:#334155;">
+          Menyiapkan kamera... Arahkan ke QR atau 16 digit KTP/KK.
+        </div>
+
+        <button type="button" class="btn-scan-primary" id="btnCaptureOcr" onclick="captureAndReadOcr()">
+          <span>📸</span> Jepret &amp; Baca 16 Digit Sekarang
+        </button>
+
+        <div class="scanner-sub-actions">
+          <button type="button" class="btn btn-outline btn-sm" onclick="switchCameraFacing()">🔄 Ganti Kamera</button>
+          <button type="button" class="btn btn-outline btn-sm" id="btnTorch" onclick="toggleTorch()">🔦 Senter</button>
+          <label class="btn btn-outline btn-sm" style="margin:0; cursor:pointer;">
+            🖼️ Galeri / Foto
+            <input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleImageUploadScan(event)" />
+          </label>
+        </div>
+
+        <!-- Detected 16-digit numbers buttons (for KK with multiple NIKs) -->
+        <div class="detected-chips" id="detectedNumbersList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: CITIZEN QR CARD ==================== -->
+  <div class="modal-backdrop" id="qrCardModal">
+    <div class="modal-card" style="max-width:400px;">
+      <div class="modal-header">
+        <div style="font-weight:800; font-size:14px;">🪪 Kartu QR Warga KDKMP</div>
+        <button type="button" class="modal-close" onclick="closeQrCardModal()">✕</button>
+      </div>
+      <div class="card-body" style="text-align:center;">
+        <div id="qrCardPrintable" style="border:2px solid var(--excel-green); border-radius:12px; padding:16px; background:#FFFFFF;">
+          <div style="font-size:11px; font-weight:800; color:var(--excel-green); letter-spacing:0.5px;">KDKMP SELAGEDANG — KARTU KUOTA SEMBAKO</div>
+          <div style="font-size:17px; font-weight:800; margin:6px 0 2px 0;" id="qrCardName">-</div>
+          <div style="font-family:monospace; font-size:12px; color:#475569; margin-bottom:10px;" id="qrCardIds">-</div>
+          <img id="qrCardImg" alt="QR Warga" style="width:190px; height:190px; border:1px solid #E2E8F0; border-radius:8px; padding:6px; background:#FFF;" />
+          <div style="font-size:11px; color:#64748B; margin-top:8px;">Tunjukkan kartu ini di kasir untuk scan otomatis 1 detik</div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button type="button" class="btn btn-green" style="flex:1;" onclick="downloadQrCardPng()">📥 Simpan Gambar QR</button>
+          <button type="button" class="btn btn-outline" onclick="closeQrCardModal()">Tutup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="ocrWorkCanvas" style="display:none;"></canvas>
+
+  <script>
+    /* =====================================================================
+       STATE & PERSISTENCE (COMPATIBLE WITH EXISTING KDKMP DATA)
+    ===================================================================== */
+    const STORAGE_CITIZENS = 'kdkmp_citizens_v3';
+    const STORAGE_TX = 'kdkmp_tx_v3';
+    const CHANNEL_NAME = 'kdkmp_pos_sync_v3';
+
+    let citizens = [];
+    let transactions = [];
+    let selectedCitizenId = null;
+    let selectedDateStr = getTodayStr();
+    let sphpQty = 1;
+    let regMode = 'nik'; // 'nik' | 'kk'
+    let dbFilter = 'all';
+    let mobileNumpadVisible = true;
+
+    // Camera & OCR state
+    let cameraStream = null;
+    let currentFacingMode = 'environment';
+    let torchEnabled = false;
+    let scanMode = 'line'; // 'line' | 'full'
+    let qrLoopTimer = null;
+    let tesseractWorker = null;
+    let isOcrBusy = false;
+
+    // BroadcastChannel for multi-tab live sync
+    const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel(CHANNEL_NAME) : null;
+    if (syncChannel) {
+      syncChannel.onmessage = (ev) => {
+        if (ev.data && ev.data.type === 'DATA_UPDATED') {
+          loadFromStorage(false);
+          refreshAllUI();
+        }
+      };
+    }
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_CITIZENS || e.key === STORAGE_TX) {
+        loadFromStorage(false);
+        refreshAllUI();
+      }
+    });
+
+    function notifySync() {
+      if (syncChannel) {
+        syncChannel.postMessage({ type: 'DATA_UPDATED', ts: Date.now() });
+      }
+    }
+
+    function loadFromStorage(migrateLegacy = true) {
+      try {
+        const rawC = localStorage.getItem(STORAGE_CITIZENS);
+        const rawT = localStorage.getItem(STORAGE_TX);
+        citizens = rawC ? JSON.parse(rawC) : [];
+        transactions = rawT ? JSON.parse(rawT) : [];
+
+        // Migrate older v1/v2 keys seamlessly if v3 is empty
+        if (migrateLegacy && citizens.length === 0 && transactions.length === 0) {
+          const oldC = localStorage.getItem('kdkmp_citizens_v2') || localStorage.getItem('kdkmp_citizens_v1') || localStorage.getItem('sembako_citizens');
+          const oldT = localStorage.getItem('kdkmp_tx_v2') || localStorage.getItem('kdkmp_tx_v1') || localStorage.getItem('sembako_transactions');
+          if (oldC) {
+            const parsedC = JSON.parse(oldC);
+            if (Array.isArray(parsedC) && parsedC.length > 0) {
+              citizens = parsedC.map(c => ({
+                id: c.id || uid(),
+                name: c.name || c.nama || 'Warga',
+                nik: cleanDigits(c.nik || ''),
+                kk: cleanDigits(c.kk || ''),
+                extraNiks: Array.isArray(c.extraNiks) ? c.extraNiks : [],
+                createdAt: c.createdAt || new Date().toISOString()
+              }));
+              saveCitizens(false);
+            }
+          }
+          if (oldT) {
+            const parsedT = JSON.parse(oldT);
+            if (Array.isArray(parsedT) && parsedT.length > 0) {
+              transactions = parsedT;
+              saveTransactions(false);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Storage read error:', err);
+        citizens = [];
+        transactions = [];
+      }
+    }
+
+    function saveCitizens(broadcast = true) {
+      localStorage.setItem(STORAGE_CITIZENS, JSON.stringify(citizens));
+      if (broadcast) notifySync();
+    }
+
+    function saveTransactions(broadcast = true) {
+      localStorage.setItem(STORAGE_TX, JSON.stringify(transactions));
+      if (broadcast) notifySync();
+    }
+
+    /* =====================================================================
+       DATE & QUOTA CALCULATION HELPERS
+    ===================================================================== */
+    function uid() {
+      return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+    }
+
+    function cleanDigits(str) {
+      return String(str || '').replace(/\D/g, '');
+    }
+
+    function getTodayStr() {
+      const d = new Date();
+      return formatDateLocal(d);
+    }
+
+    function getYesterdayStr() {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      return formatDateLocal(d);
+    }
+
+    function formatDateLocal(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function formatDateIndo(dateStr) {
+      if (!dateStr) return '-';
+      const [y, m, d] = dateStr.split('-');
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      return `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1] || m} ${y}`;
+    }
+
+    // ISO Week key (Monday - Sunday) for weekly quotas (Gas 3kg & Beras SPHP)
+    function getWeekKey(dateStr) {
+      const parts = dateStr.split('-').map(Number);
+      const d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+    }
+
+    function getQuotaStatusForCitizen(citizen, refDateStr) {
+      const targetWeek = getWeekKey(refDateStr);
+
+      // 1. Minyak Goreng: 1 Liter / day per NIK
+      let oilUsed = 0;
+      if (citizen && citizen.nik && citizen.nik.length === 16) {
+        oilUsed = transactions
+          .filter(t => t.item === 'minyak' && t.date === refDateStr && t.nik === citizen.nik)
+          .reduce((sum, t) => sum + Number(t.qty || 0), 0);
+      }
+
+      // 2 & 3. Gas 3kg (1/week per KK) & Beras SPHP (5/week per KK)
+      let gasUsed = 0;
+      let riceUsed = 0;
+      if (citizen && citizen.kk && citizen.kk.length === 16) {
+        gasUsed = transactions
+          .filter(t => t.item === 'gas' && getWeekKey(t.date) === targetWeek && t.kk === citizen.kk)
+          .reduce((sum, t) => sum + Number(t.qty || 0), 0);
+
+        riceUsed = transactions
+          .filter(t => t.item === 'beras' && getWeekKey(t.date) === targetWeek && t.kk === citizen.kk)
+          .reduce((sum, t) => sum + Number(t.qty || 0), 0);
+      }
+
+      return {
+        oilUsed,
+        oilMax: 1,
+        oilRem: Math.max(0, 1 - oilUsed),
+        gasUsed,
+        gasMax: 1,
+        gasRem: Math.max(0, 1 - gasUsed),
+        riceUsed,
+        riceMax: 5,
+        riceRem: Math.max(0, 5 - riceUsed),
+        targetWeek
+      };
+    }
+
+    /* =====================================================================
+       SEARCH, NUMPAD & CITIZEN LOOKUP
+    ===================================================================== */
+    function findCitizenBy16Digit(digits) {
+      if (!digits || digits.length !== 16) return null;
+      return citizens.find(c =>
+        c.nik === digits ||
+        c.kk === digits ||
+        (Array.isArray(c.extraNiks) && c.extraNiks.includes(digits))
+      ) || null;
+    }
+
+    function handleSearchInput() {
+      const input = document.getElementById('searchInput');
+      const raw = input.value;
+      const digits = cleanDigits(raw);
+
+      // Update digit counter badge
+      const counter = document.getElementById('digitCounter');
+      counter.textContent = `${digits.length} / 16 digit`;
+      counter.classList.toggle('ok', digits.length === 16);
+
+      // Exact 16-digit match check
+      if (digits.length === 16) {
+        const found = findCitizenBy16Digit(digits);
+        if (found) {
+          selectedCitizenId = found.id;
+          sphpQty = 1;
+          document.getElementById('searchSuggestions').innerHTML = '';
+          document.getElementById('detectedIdTypeBadge').textContent =
+            found.nik === digits ? '✓ Cocok No. NIK' : '✓ Cocok No. KK';
+        } else {
+          selectedCitizenId = null;
+          document.getElementById('detectedIdTypeBadge').textContent = '🆕 Nomor Belum Terdaftar';
+        }
+      } else {
+        document.getElementById('detectedIdTypeBadge').textContent = '';
+        // Partial search suggestions (by name or partial digits)
+        const q = raw.trim().toLowerCase();
+        if (q.length >= 2) {
+          const matches = citizens.filter(c =>
+            (c.name && c.name.toLowerCase().includes(q)) ||
+            (c.nik && c.nik.includes(digits) && digits.length >= 3) ||
+            (c.kk && c.kk.includes(digits) && digits.length >= 3)
+          ).slice(0, 5);
+
+          renderSuggestions(matches);
+          if (!matches.some(m => m.id === selectedCitizenId)) {
+            selectedCitizenId = null;
+          }
+        } else {
+          document.getElementById('searchSuggestions').innerHTML = '';
+          selectedCitizenId = null;
+        }
+      }
+
+      renderCitizenPanel();
+      renderCommodities();
+      updateStickyMobileBanner();
+    }
+
+    function renderSuggestions(matches) {
+      const box = document.getElementById('searchSuggestions');
+      if (!matches || matches.length === 0) {
+        box.innerHTML = '';
+        return;
+      }
+      box.innerHTML = matches.map(c => `
+        <div class="search-hit-item" onclick="selectCitizen('${c.id}')">
+          <div>
+            <div style="font-weight:800; font-size:13px;">${escapeHtml(c.name)}</div>
+            <div style="font-family:monospace; font-size:11px; color:#475569;">
+              NIK: ${c.nik || '<i>Belum ada</i>'} • KK: ${c.kk || '<i>Belum ada</i>'}
+            </div>
+          </div>
+          <span class="tag tag-green">Pilih →</span>
+        </div>
+      `).join('');
+    }
+
+    function selectCitizen(id) {
+      const c = citizens.find(x => x.id === id);
+      if (!c) return;
+      selectedCitizenId = c.id;
+      sphpQty = 1;
+      document.getElementById('searchInput').value = c.nik || c.kk || c.name;
+      const dLen = cleanDigits(document.getElementById('searchInput').value).length;
+      document.getElementById('digitCounter').textContent = `${dLen} / 16 digit`;
+      document.getElementById('digitCounter').classList.toggle('ok', dLen === 16);
+      document.getElementById('searchSuggestions').innerHTML = '';
+      renderCitizenPanel();
+      renderCommodities();
+      updateStickyMobileBanner();
+    }
+
+    function appendDigit(d) {
+      const input = document.getElementById('searchInput');
+      const curDigits = cleanDigits(input.value);
+      if (curDigits.length >= 16) {
+        showToast('Sudah 16 digit. Tekan RESET untuk nomor baru.', 'warn');
+        return;
+      }
+      input.value = curDigits + d;
+      handleSearchInput();
+    }
+
+    function backspaceDigit() {
+      const input = document.getElementById('searchInput');
+      input.value = input.value.slice(0, -1);
+      handleSearchInput();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('searchInput');
+      input.value = '';
+      selectedCitizenId = null;
+      sphpQty = 1;
+      document.getElementById('searchSuggestions').innerHTML = '';
+      handleSearchInput();
+    }
+
+    function resetSearchFocus() {
+      clearSearch();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('searchInput').focus();
+    }
+
+    async function pasteFromClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        const digits = cleanDigits(text);
+        const input = document.getElementById('searchInput');
+        input.value = digits.length >= 16 ? digits.slice(0, 16) : text.trim();
+        handleSearchInput();
+        showToast('Teks berhasil ditempel.');
+      } catch (e) {
+        showToast('Izin tempel otomatis diblokir browser. Tekan & tahan di kotak pencarian lalu pilih Tempel.', 'warn');
+        document.getElementById('searchInput').focus();
+      }
+    }
+
+    function toggleMobileNumpad() {
+      mobileNumpadVisible = !mobileNumpadVisible;
+      const grid = document.getElementById('numpadGrid');
+      const lbl = document.getElementById('numpadToggleLabel');
+      grid.classList.toggle('collapsed-mobile', !mobileNumpadVisible);
+      lbl.textContent = mobileNumpadVisible ? 'Sembunyikan ▲' : 'Tampilkan ▼';
+    }
+
+    function updateStickyMobileBanner() {
+      const banner = document.getElementById('mobileStickyCitizen');
+      const c = citizens.find(x => x.id === selectedCitizenId);
+      if (c) {
+        document.getElementById('stickyName').textContent = `👤 ${c.name}`;
+        document.getElementById('stickyIds').textContent =
+          `NIK: ${c.nik || '-'} | KK: ${c.kk || '-'}`;
+        banner.classList.add('visible');
+      } else {
+        banner.classList.remove('visible');
+      }
+    }
+
+    /* =====================================================================
+       CITIZEN PROFILE & TWO-WAY GRADUAL REGISTRATION PANEL
+    ===================================================================== */
+    function setRegMode(mode) {
+      regMode = mode;
+      renderCitizenPanel();
+    }
+
+    function renderCitizenPanel() {
+      const container = document.getElementById('citizenPanelContainer');
+      const rawVal = document.getElementById('searchInput').value.trim();
+      const digits = cleanDigits(rawVal);
+      const selected = citizens.find(x => x.id === selectedCitizenId);
+
+      // CASE 1: Existing Citizen Found
+      if (selected) {
+        const hasNik = selected.nik && selected.nik.length === 16;
+        const hasKk = selected.kk && selected.kk.length === 16;
+
+        let statusHtml = '';
+        if (hasNik && hasKk) {
+          statusHtml = `<span class="tag tag-green">✅ DATA LENGKAP (NIK &amp; KK)</span>`;
+        } else if (hasNik && !hasKk) {
+          statusHtml = `<span class="tag tag-warn">⚠️ NIK TERDAFTAR • NO. KK BELUM ADA</span>`;
+        } else if (!hasNik && hasKk) {
+          statusHtml = `<span class="tag tag-info">ℹ️ NO. KK TERDAFTAR • NIK BELUM ADA</span>`;
+        }
+
+        let completeInlineHtml = '';
+        if (!hasKk) {
+          completeInlineHtml = `
+            <div class="inline-complete-box">
+              <div class="inline-complete-title">Lengkapi No. KK (16 Digit) untuk membuka kuota Gas 3kg &amp; Beras SPHP:</div>
+              <div class="inline-input-row">
+                <input type="tel" maxlength="16" id="inlineCompleteKk" class="form-input mono-input" placeholder="Ketik 16 digit No. KK..." />
+                <button type="button" class="btn btn-warn" onclick="completeCitizenId('${selected.id}', 'kk')">Simpan KK</button>
+              </div>
+            </div>
+          `;
+        } else if (!hasNik) {
+          completeInlineHtml = `
+            <div class="inline-complete-box" style="background:#F0F9FF; border-color:#38BDF8;">
+              <div class="inline-complete-title" style="color:#075985;">Lengkapi No. NIK (16 Digit) untuk membuka kuota Minyak Goreng:</div>
+              <div class="inline-input-row">
+                <input type="tel" maxlength="16" id="inlineCompleteNik" class="form-input mono-input" placeholder="Ketik 16 digit No. NIK..." />
+                <button type="button" class="btn btn-green" onclick="completeCitizenId('${selected.id}', 'nik')">Simpan NIK</button>
+              </div>
+            </div>
+          `;
+        }
+
+        container.innerHTML = `
+          <div class="profile-box">
+            <div class="profile-header">
+              <div>
+                <h3 class="citizen-name">${escapeHtml(selected.name)}</h3>
+                <div class="status-tags">${statusHtml}</div>
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="openQrCardModal('${selected.id}')">🪪 Kartu QR</button>
+            </div>
+            <div class="id-grid">
+              <div class="id-cell">
+                <div class="id-label">No. NIK (Minyak)</div>
+                <div class="id-val">${hasNik ? selected.nik : '<span style="color:#D97706;">Belum diisi</span>'}</div>
+              </div>
+              <div class="id-cell">
+                <div class="id-label">No. KK (Gas &amp; SPHP)</div>
+                <div class="id-val">${hasKk ? selected.kk : '<span style="color:#D97706;">Belum diisi</span>'}</div>
+              </div>
+            </div>
+            ${completeInlineHtml}
+          </div>
+        `;
+        return;
+      }
+
+      // CASE 2: 16 Digits Entered & Not Registered -> Two-Way Flexible Registration Form
+      if (digits.length === 16) {
+        const isNikMode = (regMode === 'nik');
+        container.innerHTML = `
+          <div class="reg-box">
+            <div style="font-weight:800; font-size:13px; color:#166534; margin-bottom:6px;">
+              🆕 Nomor Baru (${digits}) — Pilih Jenis Nomor:
+            </div>
+            <div class="reg-switch-row">
+              <button type="button" class="reg-type-btn ${isNikMode ? 'active' : ''}" onclick="setRegMode('nik')">
+                🪪 Angka ini No. NIK<br><span style="font-size:10px; font-weight:500;">(Bisa beli Minyak tanpa KK)</span>
+              </button>
+              <button type="button" class="reg-type-btn ${!isNikMode ? 'active' : ''}" onclick="setRegMode('kk')">
+                👪 Angka ini No. KK<br><span style="font-size:10px; font-weight:500;">(Bisa beli SPHP &amp; Gas)</span>
+              </button>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label"><span>Nama Lengkap Pembeli *</span></label>
+              <input type="text" id="regNameInput" class="form-input" placeholder="Masukkan nama sesuai KTP / KK..." />
+            </div>
+
+            ${isNikMode ? `
+              <div class="form-group">
+                <label class="form-label">
+                  <span>No. KK (16 Digit)</span>
+                  <span style="color:#15803D;">Opsional jika hanya beli Minyak</span>
+                </label>
+                <input type="tel" maxlength="16" id="regSecondIdInput" class="form-input mono-input" placeholder="Kosongkan jika tidak bawa KK..." />
+              </div>
+            ` : `
+              <div class="form-group">
+                <label class="form-label">
+                  <span>No. NIK Pembeli (16 Digit)</span>
+                  <span style="color:#15803D;">Opsional jika hanya bawa KK</span>
+                </label>
+                <input type="tel" maxlength="16" id="regSecondIdInput" class="form-input mono-input" placeholder="Kosongkan jika tidak dicatat..." />
+              </div>
+            `}
+
+            <button type="button" class="btn btn-green" style="width:100%; min-height:46px; font-size:13.5px;" onclick="registerNewCitizen('${digits}')">
+              ✅ Simpan &amp; Buka Kuota Sembako
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      // CASE 3: Idle prompt
+      container.innerHTML = `
+        <div style="background:#F8FAFC; border:1px dashed #CBD5E1; border-radius:9px; padding:12px; text-align:center; color:#64748B; font-size:12.5px;">
+          Ketik atau scan <strong>16 digit NIK / No. KK</strong> untuk mengecek sisa kuota harian &amp; mingguan warga.
+        </div>
+      `;
+    }
+
+    function registerNewCitizen(primary16Digits) {
+      const nameEl = document.getElementById('regNameInput');
+      const secondEl = document.getElementById('regSecondIdInput');
+      const name = (nameEl ? nameEl.value : '').trim();
+      const secondDigits = cleanDigits(secondEl ? secondEl.value : '');
+
+      if (!name) {
+        showToast('Nama lengkap warga wajib diisi.', 'error');
+        if (nameEl) nameEl.focus();
+        return;
+      }
+      if (secondDigits.length > 0 && secondDigits.length !== 16) {
+        showToast('Nomor tambahan harus tepat 16 digit atau dikosongkan.', 'error');
+        if (secondEl) secondEl.focus();
+        return;
+      }
+
+      const nik = (regMode === 'nik') ? primary16Digits : secondDigits;
+      const kk = (regMode === 'kk') ? primary16Digits : secondDigits;
+
+      // Check if secondDigits already exists in database to merge smoothly
+      if (secondDigits.length === 16) {
+        const existingOther = findCitizenBy16Digit(secondDigits);
+        if (existingOther) {
+          if (nik && !existingOther.nik) existingOther.nik = nik;
+          if (kk && !existingOther.kk) existingOther.kk = kk;
+          saveCitizens();
+          selectCitizen(existingOther.id);
+          showToast(`Data digabungkan dengan profil ${existingOther.name}.`);
+          return;
+        }
+      }
+
+      const newCitizen = {
+        id: uid(),
+        name,
+        nik: nik || '',
+        kk: kk || '',
+        extraNiks: [],
+        createdAt: new Date().toISOString()
+      };
+
+      citizens.unshift(newCitizen);
+      saveCitizens();
+      selectCitizen(newCitizen.id);
+      showToast(`Warga "${name}" terdaftar! Silakan pilih komoditas.`);
+    }
+
+    function completeCitizenId(citizenId, fieldType) {
+      const c = citizens.find(x => x.id === citizenId);
+      if (!c) return;
+      const inputId = fieldType === 'kk' ? 'inlineCompleteKk' : 'inlineCompleteNik';
+      const val = cleanDigits(document.getElementById(inputId).value);
+
+      if (val.length !== 16) {
+        showToast(`Nomor ${fieldType.toUpperCase()} harus tepat 16 digit.`, 'error');
+        return;
+      }
+
+      // Check if another record already holds this 16-digit ID -> Auto-Merge!
+      const duplicate = citizens.find(x => x.id !== c.id && (x.nik === val || x.kk === val));
+      if (duplicate) {
+        if (fieldType === 'kk') {
+          // Merge c into duplicate (which has KK) or copy KK to c
+          if (!duplicate.nik && c.nik) duplicate.nik = c.nik;
+          if (c.nik && duplicate.nik !== c.nik) {
+            duplicate.extraNiks = Array.from(new Set([...(duplicate.extraNiks || []), c.nik]));
+          }
+          // Re-link any transactions of c to include this KK
+          transactions.forEach(t => {
+            if (t.citizenId === c.id && !t.kk) t.kk = val;
+          });
+          citizens = citizens.filter(x => x.id !== c.id);
+          saveCitizens();
+          saveTransactions();
+          selectCitizen(duplicate.id);
+          showToast(`Data digabungkan otomatis ke keluarga ${duplicate.name}!`);
+          return;
+        } else {
+          if (!duplicate.kk && c.kk) duplicate.kk = c.kk;
+          transactions.forEach(t => {
+            if (t.citizenId === c.id && !t.nik) t.nik = val;
+          });
+          citizens = citizens.filter(x => x.id !== c.id);
+          saveCitizens();
+          saveTransactions();
+          selectCitizen(duplicate.id);
+          showToast(`Data NIK digabungkan otomatis dengan ${duplicate.name}!`);
+          return;
+        }
+      }
+
+      if (fieldType === 'kk') {
+        c.kk = val;
+        transactions.forEach(t => {
+          if (t.citizenId === c.id && !t.kk) t.kk = val;
+        });
+      } else {
+        c.nik = val;
+        transactions.forEach(t => {
+          if (t.citizenId === c.id && !t.nik) t.nik = val;
+        });
+      }
+
+      saveCitizens();
+      saveTransactions();
+      renderCitizenPanel();
+      renderCommodities();
+      updateStickyMobileBanner();
+      showToast(`No. ${fieldType.toUpperCase()} berhasil dilengkapi!`);
+    }
+
+    /* =====================================================================
+       TRANSACTION DATE & COMMODITY CARDS
+    ===================================================================== */
+    function setTxDatePreset(preset) {
+      selectedDateStr = (preset === 'yesterday') ? getYesterdayStr() : getTodayStr();
+      document.getElementById('txDateInput').value = selectedDateStr;
+      updateDateToolbarUI();
+      renderCommodities();
+      renderRecentTransactions();
+    }
+
+    function onManualDateChange() {
+      const val = document.getElementById('txDateInput').value;
+      if (val) {
+        selectedDateStr = val;
+        updateDateToolbarUI();
+        renderCommodities();
+        renderRecentTransactions();
+      }
+    }
+
+    function updateDateToolbarUI() {
+      const today = getTodayStr();
+      const yesterday = getYesterdayStr();
+      const btnT = document.getElementById('btnDateToday');
+      const btnY = document.getElementById('btnDateYesterday');
+      const info = document.getElementById('activePeriodInfo');
+      const recentLbl = document.getElementById('recentDateLabel');
+
+      btnT.className = 'date-pill-btn' + (selectedDateStr === today ? ' active' : '');
+      btnY.className = 'date-pill-btn' + (selectedDateStr === yesterday ? ' yesterday-active' : '');
+
+      if (selectedDateStr === today) {
+        info.textContent = `Tanggal Catat: Hari Ini (${formatDateIndo(selectedDateStr)})`;
+        recentLbl.textContent = 'Hari Ini';
+      } else if (selectedDateStr === yesterday) {
+        info.innerHTML = `<span style="color:#B45309;">⚠️ Mode Susulan: Kemarin (${formatDateIndo(selectedDateStr)})</span>`;
+        recentLbl.textContent = `Kemarin (${formatDateIndo(selectedDateStr)})`;
+      } else {
+        info.innerHTML = `<span style="color:#0369A1;">📅 Tanggal Pilihan: ${formatDateIndo(selectedDateStr)}</span>`;
+        recentLbl.textContent = formatDateIndo(selectedDateStr);
+      }
+    }
+
+    function changeSphpQty(delta) {
+      const c = citizens.find(x => x.id === selectedCitizenId);
+      const q = c ? getQuotaStatusForCitizen(c, selectedDateStr) : { riceRem: 5 };
+      const maxAllowed = Math.max(1, q.riceRem);
+      sphpQty = Math.min(maxAllowed, Math.max(1, sphpQty + delta));
+      renderCommodities();
+    }
+
+    function renderCommodities() {
+      const container = document.getElementById('commoditiesContainer');
+      const c = citizens.find(x => x.id === selectedCitizenId);
+
+      if (!c) {
+        container.innerHTML = `
+          ${buildCommodityCardSkeleton('🛢️', 'Minyak Goreng (Minyakita)', '1 Liter / Hari per NIK', '1 Liter')}
+          ${buildCommodityCardSkeleton('🔥', 'Gas LPG 3kg', '1 Tabung / Minggu per KK', '1 Tabung')}
+          ${buildCommodityCardSkeleton('🌾', 'Beras SPHP', '5 Pack / Minggu per KK', '5 Pack')}
+        `;
+        return;
+      }
+
+      const q = getQuotaStatusForCitizen(c, selectedDateStr);
+      const hasNik = c.nik && c.nik.length === 16;
+      const hasKk = c.kk && c.kk.length === 16;
+
+      // 1. MINYAK GORENG CARD
+      let oilCardClass = 'item-card';
+      let oilBtnHtml = '';
+      if (!hasNik) {
+        oilCardClass += ' locked';
+        oilBtnHtml = `<button type="button" class="btn-tx btn-tx-locked" onclick="focusInlineComplete('nik')">🔒 Butuh No. NIK (16 Digit)</button>`;
+      } else if (q.oilRem <= 0) {
+        oilCardClass += ' exhausted';
+        oilBtnHtml = `<button type="button" class="btn-tx btn-tx-disabled" disabled>⛔ Kuota Hari Ini Habis (1/1 L)</button>`;
+      } else {
+        oilCardClass += ' eligible';
+        oilBtnHtml = `<button type="button" class="btn-tx btn-tx-ready" onclick="recordTransaction('minyak', 1)">+ Catat 1 Liter Minyak</button>`;
+      }
+
+      // 2. GAS LPG 3KG CARD
+      let gasCardClass = 'item-card';
+      let gasBtnHtml = '';
+      if (!hasKk) {
+        gasCardClass += ' locked';
+        gasBtnHtml = `<button type="button" class="btn-tx btn-tx-locked" onclick="focusInlineComplete('kk')">🔒 Butuh No. KK (16 Digit)</button>`;
+      } else if (q.gasRem <= 0) {
+        gasCardClass += ' exhausted';
+        gasBtnHtml = `<button type="button" class="btn-tx btn-tx-disabled" disabled>⛔ Kuota Minggu Ini Habis (1/1)</button>`;
+      } else {
+        gasCardClass += ' eligible';
+        gasBtnHtml = `<button type="button" class="btn-tx btn-tx-ready" onclick="recordTransaction('gas', 1)">+ Catat 1 Tabung Gas 3kg</button>`;
+      }
+
+      // 3. BERAS SPHP CARD
+      let riceCardClass = 'item-card';
+      let riceStepperHtml = '';
+      let riceBtnHtml = '';
+      if (!hasKk) {
+        riceCardClass += ' locked';
+        riceBtnHtml = `<button type="button" class="btn-tx btn-tx-locked" onclick="focusInlineComplete('kk')">🔒 Butuh No. KK (16 Digit)</button>`;
+      } else if (q.riceRem <= 0) {
+        riceCardClass += ' exhausted';
+        riceBtnHtml = `<button type="button" class="btn-tx btn-tx-disabled" disabled>⛔ Kuota Minggu Ini Habis (5/5)</button>`;
+      } else {
+        riceCardClass += ' eligible';
+        if (sphpQty > q.riceRem) sphpQty = q.riceRem;
+        riceStepperHtml = `
+          <div class="sphp-stepper">
+            <button type="button" class="step-btn" onclick="changeSphpQty(-1)">−</button>
+            <span class="step-val">${sphpQty} Pack (${sphpQty * 5} kg)</span>
+            <button type="button" class="step-btn" onclick="changeSphpQty(1)">+</button>
+          </div>
+        `;
+        riceBtnHtml = `<button type="button" class="btn-tx btn-tx-ready" onclick="recordTransaction('beras', ${sphpQty})">+ Catat ${sphpQty} Pack SPHP</button>`;
+      }
+
+      container.innerHTML = `
+        <!-- Minyak -->
+        <div class="${oilCardClass}">
+          <div>
+            <div class="item-top">
+              <span class="item-icon">🛢️</span>
+              <span class="item-rule-badge">1L / Hari / NIK</span>
+            </div>
+            <h4 class="item-name">Minyak Goreng</h4>
+            <div class="item-sub">Minyakita Subsidi</div>
+            <div class="quota-meter">
+              <div class="quota-numbers">
+                <span style="font-size:11.5px; font-weight:700; color:#475569;">Sisa Kuota:</span>
+                <span class="quota-rem ${!hasNik ? 'muted' : (q.oilRem === 0 ? 'zero' : '')}">
+                  ${hasNik ? `${q.oilRem} / 1 Liter` : 'Terkunci'}
+                </span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill ${q.oilRem === 0 ? 'full' : ''}" style="width:${hasNik ? (q.oilUsed / 1) * 100 : 0}%"></div>
+              </div>
+            </div>
+          </div>
+          <div>${oilBtnHtml}</div>
+        </div>
+
+        <!-- Gas 3kg -->
+        <div class="${gasCardClass}">
+          <div>
+            <div class="item-top">
+              <span class="item-icon">🔥</span>
+              <span class="item-rule-badge">1 Tbg / Minggu / KK</span>
+            </div>
+            <h4 class="item-name">Gas LPG 3kg</h4>
+            <div class="item-sub">Tabung Melon Subsidi</div>
+            <div class="quota-meter">
+              <div class="quota-numbers">
+                <span style="font-size:11.5px; font-weight:700; color:#475569;">Sisa Kuota:</span>
+                <span class="quota-rem ${!hasKk ? 'muted' : (q.gasRem === 0 ? 'zero' : '')}">
+                  ${hasKk ? `${q.gasRem} / 1 Tabung` : 'Terkunci'}
+                </span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill ${q.gasRem === 0 ? 'full' : ''}" style="width:${hasKk ? (q.gasUsed / 1) * 100 : 0}%"></div>
+              </div>
+            </div>
+          </div>
+          <div>${gasBtnHtml}</div>
+        </div>
+
+        <!-- Beras SPHP -->
+        <div class="${riceCardClass}">
+          <div>
+            <div class="item-top">
+              <span class="item-icon">🌾</span>
+              <span class="item-rule-badge">5 Pack / Minggu / KK</span>
+            </div>
+            <h4 class="item-name">Beras SPHP</h4>
+            <div class="item-sub">Kemasan 5 kg Bulog</div>
+            <div class="quota-meter">
+              <div class="quota-numbers">
+                <span style="font-size:11.5px; font-weight:700; color:#475569;">Sisa Kuota:</span>
+                <span class="quota-rem ${!hasKk ? 'muted' : (q.riceRem === 0 ? 'zero' : '')}">
+                  ${hasKk ? `${q.riceRem} / 5 Pack` : 'Terkunci'}
+                </span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill ${q.riceRem === 0 ? 'full' : ''}" style="width:${hasKk ? (q.riceUsed / 5) * 100 : 0}%"></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            ${riceStepperHtml}
+            ${riceBtnHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function buildCommodityCardSkeleton(icon, name, rule, quotaText) {
+      return `
+        <div class="item-card">
+          <div>
+            <div class="item-top">
+              <span class="item-icon">${icon}</span>
+              <span class="item-rule-badge">${rule}</span>
+            </div>
+            <h4 class="item-name">${name}</h4>
+            <div class="quota-meter" style="margin-top:10px;">
+              <div class="quota-numbers">
+                <span style="font-size:11.5px; color:#64748B;">Jatah Maks:</span>
+                <span class="quota-rem muted">${quotaText}</span>
+              </div>
+              <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <button type="button" class="btn-tx btn-tx-disabled" disabled>Input NIK / KK Dahulu</button>
+        </div>
+      `;
+    }
+
+    function focusInlineComplete(type) {
+      const el = document.getElementById(type === 'kk' ? 'inlineCompleteKk' : 'inlineCompleteNik');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+      }
+    }
+
+    function recordTransaction(itemKey, qty) {
+      const c = citizens.find(x => x.id === selectedCitizenId);
+      if (!c) return;
+
+      const q = getQuotaStatusForCitizen(c, selectedDateStr);
+      if (itemKey === 'minyak') {
+        if (!c.nik || c.nik.length !== 16) return showToast('Butuh 16 digit No. NIK untuk Minyak Goreng.', 'error');
+        if (q.oilRem < qty) return showToast('Kuota Minyak Goreng hari ini sudah habis!', 'error');
+      } else if (itemKey === 'gas') {
+        if (!c.kk || c.kk.length !== 16) return showToast('Butuh 16 digit No. KK untuk Gas LPG 3kg.', 'error');
+        if (q.gasRem < qty) return showToast('Kuota Gas LPG 3kg minggu ini sudah habis!', 'error');
+      } else if (itemKey === 'beras') {
+        if (!c.kk || c.kk.length !== 16) return showToast('Butuh 16 digit No. KK untuk Beras SPHP.', 'error');
+        if (q.riceRem < qty) return showToast(`Sisa kuota Beras SPHP hanya ${q.riceRem} pack.`, 'error');
+      }
+
+      const itemNames = {
+        minyak: 'Minyak Goreng (1L)',
+        gas: 'Gas LPG 3kg (1 Tbg)',
+        beras: `Beras SPHP (${qty} Pack)`
+      };
+
+      const tx = {
+        id: uid(),
+        date: selectedDateStr,
+        time: new Date().toTimeString().slice(0, 5),
+        citizenId: c.id,
+        name: c.name,
+        nik: c.nik || '',
+        kk: c.kk || '',
+        item: itemKey,
+        itemLabel: itemNames[itemKey],
+        qty: Number(qty)
+      };
+
+      transactions.unshift(tx);
+      saveTransactions();
+      sphpQty = 1;
+      refreshAllUI();
+      showToast(`✅ Tercatat: ${itemNames[itemKey]} — ${c.name}`);
+    }
+
+    function deleteTransaction(txId) {
+      if (!confirm('Batalkan / hapus transaksi ini? Kuota warga akan dikembalikan.')) return;
+      transactions = transactions.filter(t => t.id !== txId);
+      saveTransactions();
+      refreshAllUI();
+      showToast('Transaksi dibatalkan & kuota dikembalikan.');
+    }
+
+    function renderRecentTransactions() {
+      const container = document.getElementById('recentTxContainer');
+      const list = transactions.filter(t => t.date === selectedDateStr);
+
+      if (list.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:#64748B; font-size:12.5px; padding:10px;">Belum ada pengambilan sembako pada tanggal ${formatDateIndo(selectedDateStr)}.</div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="table-wrap">
+          <table class="excel-table">
+            <thead>
+              <tr>
+                <th>Jam</th>
+                <th>Nama Warga</th>
+                <th>Komoditas</th>
+                <th>NIK / KK</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.slice(0, 15).map(t => `
+                <tr>
+                  <td style="white-space:nowrap; font-family:monospace;">${t.time || '-'}</td>
+                  <td><strong>${escapeHtml(t.name)}</strong></td>
+                  <td><span class="tag tag-green">${escapeHtml(t.itemLabel)}</span></td>
+                  <td style="font-family:monospace; font-size:11px;">
+                    ${t.nik ? `NIK:${t.nik}` : ''}${t.nik && t.kk ? '<br>' : ''}${t.kk ? `KK:${t.kk}` : ''}
+                  </td>
+                  <td>
+                    <button type="button" class="btn btn-danger-outline btn-sm" onclick="deleteTransaction('${t.id}')">Batal</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    /* =====================================================================
+       VIEW 2: DATABASE, BATCH YESTERDAY SPHP, CSV EXPORT & JSON BACKUP
+    ===================================================================== */
+    function setDbFilter(flt) {
+      dbFilter = flt;
+      ['fltAll', 'fltNoKk', 'fltNoNik', 'fltComplete'].forEach(id => {
+        document.getElementById(id).classList.remove('active');
+      });
+      const map = { all: 'fltAll', missing_kk: 'fltNoKk', missing_nik: 'fltNoNik', complete: 'fltComplete' };
+      document.getElementById(map[flt]).classList.add('active');
+      renderDatabaseTab();
+    }
+
+    function checkBatchSphpKk() {
+      const input = document.getElementById('batchSphpKk');
+      const kk = cleanDigits(input.value);
+      input.value = kk;
+      document.getElementById('batchKkLen').textContent = `${kk.length}/16`;
+
+      if (kk.length === 16) {
+        const existing = findCitizenBy16Digit(kk);
+        if (existing) {
+          document.getElementById('batchSphpName').value = existing.name;
+          const q = getQuotaStatusForCitizen(existing, document.getElementById('batchSphpDate').value || getYesterdayStr());
+          document.getElementById('batchSphpQuotaHint').textContent = `Terdaftar • Sisa: ${q.riceRem} Pack`;
+        } else {
+          document.getElementById('batchSphpQuotaHint').textContent = `KK Baru • Sisa: 5 Pack`;
+        }
+      } else {
+        document.getElementById('batchSphpQuotaHint').textContent = `Sisa: 5 Pack`;
+      }
+    }
+
+    function submitBatchSphp() {
+      const kk = cleanDigits(document.getElementById('batchSphpKk').value);
+      const name = document.getElementById('batchSphpName').value.trim();
+      const qty = Number(document.getElementById('batchSphpQty').value || 1);
+      const dateVal = document.getElementById('batchSphpDate').value || getYesterdayStr();
+
+      if (kk.length !== 16) {
+        showToast('No. KK harus tepat 16 digit.', 'error');
+        return;
+      }
+      if (!name) {
+        showToast('Nama pembeli wajib diisi.', 'error');
+        return;
+      }
+
+      let c = findCitizenBy16Digit(kk);
+      if (!c) {
+        c = {
+          id: uid(),
+          name,
+          nik: '',
+          kk,
+          extraNiks: [],
+          createdAt: new Date().toISOString()
+        };
+        citizens.unshift(c);
+        saveCitizens();
+      } else if (!c.kk) {
+        c.kk = kk;
+        saveCitizens();
+      }
+
+      const q = getQuotaStatusForCitizen(c, dateVal);
+      if (q.riceRem < qty) {
+        showToast(`Sisa kuota SPHP minggu tersebut untuk KK ini hanya ${q.riceRem} pack.`, 'error');
+        return;
+      }
+
+      transactions.unshift({
+        id: uid(),
+        date: dateVal,
+        time: 'Susulan',
+        citizenId: c.id,
+        name: c.name,
+        nik: c.nik || '',
+        kk: c.kk,
+        item: 'beras',
+        itemLabel: `Beras SPHP (${qty} Pack)`,
+        qty
+      });
+
+      saveTransactions();
+      document.getElementById('batchSphpKk').value = '';
+      document.getElementById('batchSphpName').value = '';
+      document.getElementById('batchKkLen').textContent = '0/16';
+      refreshAllUI();
+      showToast(`✅ Susulan SPHP ${qty} Pack (${c.name}) berhasil dicatat!`);
+    }
+
+    function renderDatabaseTab() {
+      const today = getTodayStr();
+      const curWeek = getWeekKey(today);
+
+      document.getElementById('statCitizens').textContent = citizens.length;
+      document.getElementById('statOilToday').textContent =
+        transactions.filter(t => t.item === 'minyak' && t.date === today).reduce((s, t) => s + Number(t.qty || 0), 0) + ' L';
+      document.getElementById('statGasWeek').textContent =
+        transactions.filter(t => t.item === 'gas' && getWeekKey(t.date) === curWeek).reduce((s, t) => s + Number(t.qty || 0), 0) + ' Tbg';
+      document.getElementById('statRiceWeek').textContent =
+        transactions.filter(t => t.item === 'beras' && getWeekKey(t.date) === curWeek).reduce((s, t) => s + Number(t.qty || 0), 0) + ' Pack';
+
+      const q = (document.getElementById('dbSearchInput').value || '').trim().toLowerCase();
+      let filtered = citizens.filter(c => {
+        const hasNik = c.nik && c.nik.length === 16;
+        const hasKk = c.kk && c.kk.length === 16;
+        if (dbFilter === 'missing_kk' && hasKk) return false;
+        if (dbFilter === 'missing_nik' && hasNik) return false;
+        if (dbFilter === 'complete' && (!hasNik || !hasKk)) return false;
+
+        if (q) {
+          return (c.name && c.name.toLowerCase().includes(q)) ||
+                 (c.nik && c.nik.includes(q)) ||
+                 (c.kk && c.kk.includes(q));
+        }
+        return true;
+      });
+
+      const cContainer = document.getElementById('citizenTableContainer');
+      if (filtered.length === 0) {
+        cContainer.innerHTML = `<div style="text-align:center; padding:14px; color:#64748B;">Tidak ada data warga yang cocok.</div>`;
+      } else {
+        cContainer.innerHTML = `
+          <div class="table-wrap">
+            <table class="excel-table">
+              <thead>
+                <tr>
+                  <th>Nama Warga</th>
+                  <th>No. NIK (16 Digit)</th>
+                  <th>No. KK (16 Digit)</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filtered.map(c => {
+                  const hasNik = c.nik && c.nik.length === 16;
+                  const hasKk = c.kk && c.kk.length === 16;
+                  const badge = (hasNik && hasKk)
+                    ? '<span class="tag tag-green">Lengkap</span>'
+                    : (!hasKk ? '<span class="tag tag-warn">Kurang KK</span>' : '<span class="tag tag-info">Kurang NIK</span>');
+                  return `
+                    <tr>
+                      <td><strong>${escapeHtml(c.name)}</strong></td>
+                      <td style="font-family:monospace;">${hasNik ? c.nik : '-'}</td>
+                      <td style="font-family:monospace;">${hasKk ? c.kk : '-'}</td>
+                      <td>${badge}</td>
+                      <td style="white-space:nowrap;">
+                        <button type="button" class="btn btn-green btn-sm" onclick="openCitizenInPos('${c.id}')">Kasir</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="openQrCardModal('${c.id}')">QR</button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      // Full Transaction History
+      const tContainer = document.getElementById('fullTxTableContainer');
+      if (transactions.length === 0) {
+        tContainer.innerHTML = `<div style="text-align:center; padding:14px; color:#64748B;">Belum ada riwayat transaksi.</div>`;
+      } else {
+        tContainer.innerHTML = `
+          <div class="table-wrap">
+            <table class="excel-table">
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Nama Warga</th>
+                  <th>Komoditas</th>
+                  <th>Qty</th>
+                  <th>NIK / No. KK</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${transactions.slice(0, 100).map(t => `
+                  <tr>
+                    <td style="white-space:nowrap;">${formatDateIndo(t.date)} <span style="color:#64748B;">${t.time || ''}</span></td>
+                    <td><strong>${escapeHtml(t.name)}</strong></td>
+                    <td>${escapeHtml(t.itemLabel)}</td>
+                    <td><strong>${t.qty}</strong></td>
+                    <td style="font-family:monospace; font-size:11px;">
+                      ${t.nik ? `NIK:${t.nik}` : ''}${t.nik && t.kk ? '<br>' : ''}${t.kk ? `KK:${t.kk}` : ''}
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-danger-outline btn-sm" onclick="deleteTransaction('${t.id}')">Hapus</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    function openCitizenInPos(id) {
+      switchView('pos');
+      selectCitizen(id);
+    }
+
+    /* =====================================================================
+       CSV EXPORT (16-DIGIT SAFE) & JSON BACKUP / RESTORE
+    ===================================================================== */
+    function exportCSV() {
+      if (transactions.length === 0 && citizens.length === 0) {
+        showToast('Belum ada data untuk di-export.', 'warn');
+        return;
+      }
+
+      const rows = [
+        ['Tanggal', 'Jam', 'Nama_Warga', 'No_NIK_16_Digit', 'No_KK_16_Digit', 'Komoditas', 'Jumlah']
+      ];
+
+      transactions.forEach(t => {
+        rows.push([
+          t.date,
+          t.time || '',
+          `"${String(t.name || '').replace(/"/g, '""')}"`,
+          t.nik ? `="${t.nik}"` : '',
+          t.kk ? `="${t.kk}"` : '',
+          `"${String(t.itemLabel || '').replace(/"/g, '""')}"`,
+          t.qty
+        ]);
+      });
+
+      const csvContent = '\uFEFF' + rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Rekap_Kuota_KDKMP_${getTodayStr()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('📥 File Excel (.CSV) berhasil diunduh!');
+    }
+
+    function backupJSON() {
+      const payload = {
+        app: 'KDKMP_Selagedang_Kasir_Kuota',
+        exportedAt: new Date().toISOString(),
+        citizens,
+        transactions
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Backup_KDKMP_${getTodayStr()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('💾 File cadangan JSON tersimpan!');
+    }
+
+    function restoreJSON(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (Array.isArray(data.citizens) && Array.isArray(data.transactions)) {
+            citizens = data.citizens;
+            transactions = data.transactions;
+            saveCitizens();
+            saveTransactions();
+            refreshAllUI();
+            showToast(`✅ Berhasil memulihkan ${citizens.length} warga & ${transactions.length} transaksi.`);
+          } else {
+            showToast('Format file backup tidak valid.', 'error');
+          }
+        } catch (err) {
+          showToast('Gagal membaca file JSON.', 'error');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    /* =====================================================================
+       LIVE CAMERA SCANNER (QR 250ms + FAST DIGIT-ONLY OCR)
+    ===================================================================== */
+    async function openScannerModal() {
+      const modal = document.getElementById('scannerModal');
+      modal.classList.add('open');
+      document.getElementById('detectedNumbersList').innerHTML = '';
+      setScanMode('line');
+      warmUpTesseract();
+      await startCameraStream();
+    }
+
+    function closeScannerModal() {
+      const modal = document.getElementById('scannerModal');
+      modal.classList.remove('open');
+      stopCameraStream();
+    }
+
+    function setScanMode(mode) {
+      scanMode = mode;
+      document.getElementById('btnScanModeLine').classList.toggle('active', mode === 'line');
+      document.getElementById('btnScanModeFull').classList.toggle('active', mode === 'full');
+      const box = document.getElementById('roiTargetBox');
+      const lbl = document.getElementById('roiLabelText');
+      if (mode === 'line') {
+        box.classList.remove('full-mode');
+        lbl.textContent = 'Posisikan 16 digit NIK / No. KK di kotak hijau';
+      } else {
+        box.classList.add('full-mode');
+        lbl.textContent = 'Posisikan seluruh Kartu Keluarga di bingkai biru';
+      }
+    }
+
+    async function startCameraStream() {
+      stopCameraStream();
+      const banner = document.getElementById('scanStatusBanner');
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        banner.textContent = '⚠️ Kamera live tidak tersedia di mode ini. Gunakan tombol Galeri / Foto di bawah.';
+        return;
+      }
+
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: currentFacingMode },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+        const video = document.getElementById('cameraVideo');
+        video.srcObject = cameraStream;
+        await video.play();
+        banner.textContent = '🟢 Kamera Aktif • Scan QR otomatis berjalan, atau tekan Jepret untuk KTP/KK.';
+        startQrLiveLoop();
+      } catch (err) {
+        console.warn('Camera error:', err);
+        banner.textContent = '⚠️ Izin kamera belum aktif / dibuka offline. Gunakan tombol Galeri / Foto di bawah.';
+      }
+    }
+
+    function stopCameraStream() {
+      if (qrLoopTimer) {
+        clearInterval(qrLoopTimer);
+        qrLoopTimer = null;
+      }
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+      }
+      torchEnabled = false;
+    }
+
+    async function switchCameraFacing() {
+      currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+      await startCameraStream();
+    }
+
+    async function toggleTorch() {
+      if (!cameraStream) return;
+      const track = cameraStream.getVideoTracks()[0];
+      if (!track || !track.getCapabilities) return;
+      const caps = track.getCapabilities();
+      if (!caps.torch) {
+        showToast('Senter/Flash tidak didukung lensa ini.', 'warn');
+        return;
+      }
+      torchEnabled = !torchEnabled;
+      try {
+        await track.applyConstraints({ advanced: [{ torch: torchEnabled }] });
+        document.getElementById('btnTorch').textContent = torchEnabled ? '🔦 Senter ON' : '🔦 Senter';
+      } catch (e) {
+        showToast('Gagal menyalakan senter.', 'warn');
+      }
+    }
+
+    function startQrLiveLoop() {
+      if (qrLoopTimer) clearInterval(qrLoopTimer);
+      const video = document.getElementById('cameraVideo');
+      const canvas = document.getElementById('ocrWorkCanvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+      qrLoopTimer = setInterval(() => {
+        if (!cameraStream || video.readyState < 2 || isOcrBusy) return;
+        const w = 480;
+        const h = Math.round((video.videoHeight / video.videoWidth) * w) || 360;
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(video, 0, 0, w, h);
+
+        if (typeof jsQR === 'function') {
+          const imgData = ctx.getImageData(0, 0, w, h);
+          const qr = jsQR(imgData.data, w, h, { inversionAttempts: 'dontInvert' });
+          if (qr && qr.data) {
+            handleDecodedQrPayload(qr.data);
+          }
+        }
+      }, 280);
+    }
+
+    function handleDecodedQrPayload(rawPayload) {
+      const text = String(rawPayload || '').trim();
+      // Format: KDKMP|NIK|KK|NAMA or plain 16 digits
+      if (text.startsWith('KDKMP|')) {
+        const parts = text.split('|');
+        const nik = cleanDigits(parts[1] || '');
+        const kk = cleanDigits(parts[2] || '');
+        const nama = (parts[3] || '').trim();
+
+        let c = (nik.length === 16 ? findCitizenBy16Digit(nik) : null) ||
+                (kk.length === 16 ? findCitizenBy16Digit(kk) : null);
+
+        if (!c && (nik.length === 16 || kk.length === 16)) {
+          c = {
+            id: uid(),
+            name: nama || 'Warga QR',
+            nik: nik.length === 16 ? nik : '',
+            kk: kk.length === 16 ? kk : '',
+            extraNiks: [],
+            createdAt: new Date().toISOString()
+          };
+          citizens.unshift(c);
+          saveCitizens();
+        }
+        closeScannerModal();
+        if (c) {
+          selectCitizen(c.id);
+          showToast(`⚡ QR Warga terbaca: ${c.name}`);
+        }
+        return;
+      }
+
+      const digits = cleanDigits(text);
+      if (digits.length === 16) {
+        closeScannerModal();
+        document.getElementById('searchInput').value = digits;
+        handleSearchInput();
+        showToast(`⚡ QR 16 Digit terbaca: ${digits}`);
+      }
+    }
+
+    async function warmUpTesseract() {
+      if (tesseractWorker || typeof Tesseract === 'undefined') return;
+      try {
+        tesseractWorker = await Tesseract.createWorker('eng');
+        await tesseractWorker.setParameters({
+          tessedit_char_whitelist: '0123456789:.- ',
+          tessedit_pageseg_mode: '6'
+        });
+      } catch (e) {
+        console.warn('Tesseract warmup skipped (offline or blocked):', e);
+        tesseractWorker = null;
+      }
+    }
+
+    async function captureAndReadOcr() {
+      const video = document.getElementById('cameraVideo');
+      if (!cameraStream || video.readyState < 2) {
+        showToast('Kamera belum siap. Gunakan tombol Galeri / Foto di bawah.', 'warn');
+        return;
+      }
+      const canvas = document.getElementById('ocrWorkCanvas');
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+
+      if (scanMode === 'line') {
+        // Crop only center target band for fast 1-second OCR
+        const sx = Math.round(vw * 0.06);
+        const sy = Math.round(vh * 0.36);
+        const sw = Math.round(vw * 0.88);
+        const sh = Math.round(vh * 0.28);
+        canvas.width = sw;
+        canvas.height = sh;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
+      } else {
+        canvas.width = vw;
+        canvas.height = vh;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, vw, vh);
+      }
+
+      preprocessCanvasForOcr(canvas);
+      await runOcrOnCanvas(canvas);
+    }
+
+    function handleImageUploadScan(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.getElementById('ocrWorkCanvas');
+        const maxW = 1280;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // First try QR detection on uploaded image
+        if (typeof jsQR === 'function') {
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const qr = jsQR(imgData.data, canvas.width, canvas.height);
+          if (qr && qr.data) {
+            handleDecodedQrPayload(qr.data);
+            return;
+          }
+        }
+
+        preprocessCanvasForOcr(canvas);
+        await runOcrOnCanvas(canvas);
+      };
+      img.src = URL.createObjectURL(file);
+      event.target.value = '';
+    }
+
+    // High-contrast grayscale enhancement to cut through blue e-KTP background
+    function preprocessCanvasForOcr(canvas) {
+      const ctx = canvas.getContext('2d');
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        // Weight red channel heavily because blue e-KTP background has low red, dark ink has low red
+        const lum = d[i] * 0.65 + d[i + 1] * 0.25 + d[i + 2] * 0.1;
+        const enhanced = lum < 128 ? Math.max(0, lum * 0.7) : Math.min(255, lum * 1.25);
+        d[i] = d[i + 1] = d[i + 2] = enhanced;
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+
+    async function runOcrOnCanvas(canvas) {
+      const banner = document.getElementById('scanStatusBanner');
+      const listBox = document.getElementById('detectedNumbersList');
+      if (isOcrBusy) return;
+      isOcrBusy = true;
+      banner.textContent = '⏳ Membaca 16 digit NIK / No. KK...';
+
+      try {
+        if (!tesseractWorker && typeof Tesseract !== 'undefined') {
+          await warmUpTesseract();
+        }
+        if (!tesseractWorker) {
+          banner.textContent = '⚠️ Mesin OCR butuh koneksi internet saat pertama kali dimuat.';
+          isOcrBusy = false;
+          return;
+        }
+
+        const res = await tesseractWorker.recognize(canvas);
+        const rawText = (res && res.data && res.data.text) ? res.data.text : '';
+        const foundNumbers = extract16DigitCandidates(rawText);
+
+        if (foundNumbers.length === 0) {
+          banner.textContent = '❌ Belum terbaca 16 digit. Dekatkan kamera ke baris angka & hindari kilau lampu.';
+          listBox.innerHTML = '';
+        } else if (foundNumbers.length === 1) {
+          const picked = foundNumbers[0];
+          closeScannerModal();
+          document.getElementById('searchInput').value = picked;
+          handleSearchInput();
+          showToast(`✅ Berhasil scan 16 digit: ${picked}`);
+        } else {
+          banner.textContent = `✅ Ditemukan ${foundNumbers.length} nomor (16 digit). Ketuk nomor yang dipilih:`;
+          listBox.innerHTML = foundNumbers.map((num, idx) => `
+            <button type="button" class="detected-num-btn" onclick="applyDetectedNumber('${num}')">
+              <span>${idx === 0 ? 'Nomor 1' : `Nomor ${idx + 1}`}: ${num}</span>
+              <span>Pakai →</span>
+            </button>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('OCR error:', err);
+        banner.textContent = '⚠️ Gagal memproses gambar. Coba jepret ulang dengan cahaya lebih jelas.';
+      } finally {
+        isOcrBusy = false;
+      }
+    }
+
+    function extract16DigitCandidates(text) {
+      // Fix common OCR character misreads before extracting digits
+      const normalized = String(text || '')
+        .replace(/[OoQqDd]/g, '0')
+        .replace(/[Il|!]/g, '1')
+        .replace(/[Zz]/g, '2')
+        .replace(/[Ss]/g, '5')
+        .replace(/[Gg]/g, '6')
+        .replace(/[Bb]/g, '8');
+
+      const candidates = new Set();
+      // Match 16 continuous digits or grouped with spaces/dashes
+      const matches = normalized.match(/(?:\d[\s-]*){16}/g) || [];
+      matches.forEach(m => {
+        const clean = m.replace(/\D/g, '');
+        if (clean.length === 16) {
+          candidates.add(clean);
+        } else if (clean.length > 16) {
+          // Slide window for Indonesian province prefix (e.g. 32 for West Java)
+          for (let i = 0; i <= clean.length - 16; i++) {
+            const sub = clean.slice(i, i + 16);
+            if (/^(1[1-9]|21|3[1-6]|5[1-3]|6[1-5]|7[1-6]|8[1-2]|9[1-4])/.test(sub)) {
+              candidates.add(sub);
+            }
+          }
+        }
+      });
+      return Array.from(candidates);
+    }
+
+    function applyDetectedNumber(num) {
+      closeScannerModal();
+      document.getElementById('searchInput').value = num;
+      handleSearchInput();
+      showToast(`✅ Dipilih: ${num}`);
+    }
+
+    /* =====================================================================
+       CITIZEN QR CARD MODAL
+    ===================================================================== */
+    function openQrCardModal(citizenId) {
+      const c = citizens.find(x => x.id === citizenId);
+      if (!c) return;
+      const payload = `KDKMP|${c.nik || ''}|${c.kk || ''}|${c.name}`;
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payload)}`;
+
+      document.getElementById('qrCardName').textContent = c.name;
+      document.getElementById('qrCardIds').textContent =
+        `NIK: ${c.nik || '-'} | KK: ${c.kk || '-'}`;
+      document.getElementById('qrCardImg').src = qrUrl;
+      document.getElementById('qrCardModal').classList.add('open');
+    }
+
+    function closeQrCardModal() {
+      document.getElementById('qrCardModal').classList.remove('open');
+    }
+
+    function downloadQrCardPng() {
+      const img = document.getElementById('qrCardImg');
+      const name = document.getElementById('qrCardName').textContent || 'Warga';
+      window.open(img.src, '_blank');
+      showToast(`Gambar QR ${name} dibuka. Tekan & tahan gambar untuk menyimpan ke Galeri HP.`);
+    }
+
+    /* =====================================================================
+       NAVIGATION, FULLSCREEN & UI REFRESH
+    ===================================================================== */
+    function switchView(viewName) {
+      const isPos = (viewName === 'pos');
+      document.getElementById('viewPos').style.display = isPos ? 'block' : 'none';
+      document.getElementById('viewDb').style.display = isPos ? 'none' : 'block';
+
+      document.getElementById('tabBtnPos').classList.toggle('active', isPos);
+      document.getElementById('tabBtnDb').classList.toggle('active', !isPos);
+
+      document.getElementById('bnavPos').classList.toggle('active', isPos);
+      document.getElementById('bnavDb').classList.toggle('active', !isPos);
+
+      if (!isPos) {
+        renderDatabaseTab();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {
+          showToast('Gunakan menu Chrome (⋮) → Tambahkan ke layar utama untuk layar penuh otomatis.', 'warn');
+        });
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    function showToast(msg, type = 'ok') {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      el.className = 'toast' + (type === 'error' ? ' error' : (type === 'warn' ? ' warn' : ''));
+      el.innerHTML = `<span>${escapeHtml(msg)}</span>`;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.25s ease';
+        setTimeout(() => el.remove(), 260);
+      }, 3200);
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('clockBadge').textContent = `${hh}:${mm} WIB`;
+    }
+
+    function refreshAllUI() {
+      document.getElementById('tabDbCount').textContent = citizens.length;
+      renderCitizenPanel();
+      renderCommodities();
+      renderRecentTransactions();
+      updateStickyMobileBanner();
+      if (document.getElementById('viewDb').style.display !== 'none') {
+        renderDatabaseTab();
+      }
+    }
+
+    // Boot initialization
+    (function init() {
+      loadFromStorage(true);
+      document.getElementById('txDateInput').value = selectedDateStr;
+      document.getElementById('batchSphpDate').value = getYesterdayStr();
+      updateDateToolbarUI();
+      refreshAllUI();
+      updateClock();
+      setInterval(updateClock, 15000);
+    })();
+  </script>
+</body>
+</html>
