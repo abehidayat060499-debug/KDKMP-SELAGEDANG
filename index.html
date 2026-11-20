@@ -1223,32 +1223,6 @@
       border-color: var(--excel-green);
     }
 
-        /* ================= TASTEFUL PROTECTED CREDIT WATERMARK ================= */
-    .app-credit-bar {
-      text-align: center;
-      font-size: 11px;
-      color: #64748B;
-      padding: 10px 12px 14px 12px;
-      letter-spacing: 0.15px;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    .app-credit-bar span {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: rgba(255, 255, 255, 0.72);
-      border: 1px solid #E2E8F0;
-      border-radius: 999px;
-      padding: 3px 11px;
-    }
-
-    .app-credit-bar strong {
-      color: #334155;
-      font-weight: 700;
-    }
-
     /* ================= MOBILE BOTTOM NAVIGATION BAR ================= */
     .mobile-bottom-nav {
       display: none;
@@ -1964,9 +1938,6 @@
       </div>
     </section>
 
-    <footer id="kdkmpCreditFooter" class="app-credit-bar" aria-label="Kredit Pembuat Aplikasi">
-      <span>Dibuat oleh <strong>Abdurrahman</strong> • Manager KDKMP Selagedang Cibeber</span>
-    </footer>
   </main>
 
   <!-- MOBILE BOTTOM NAVIGATION BAR (< 900px) -->
@@ -2194,28 +2165,16 @@
           </button>
         </div>
 
-        <!-- Share Links: Cloud Sync OR Local-Only (No Database Access) -->
-        <div id="shareLocalBox" style="background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:9px; padding:10px; margin-bottom:10px;">
-          <div style="font-weight:800; font-size:12.5px; color:#075985; margin-bottom:4px;">
-            🔒 Bagikan Link Mode Lokal (Tanpa Akses ke Database Cloud):
-          </div>
-          <div style="font-size:11.5px; color:#0369A1; margin-bottom:8px;">
-            Koperasi lain tetap bisa memakai aplikasi ini dengan <strong>link database kosong (Mode Lokal)</strong>. Data mereka tersimpan mandiri di perangkat masing-masing dan tidak tercampur dengan database KDKMP Selagedang.
-          </div>
-          <button type="button" class="btn btn-outline btn-sm" style="width:100%; border-color:#7DD3FC; color:#0369A1;" onclick="copyLocalOnlyLink()">
-            🔗 Salin Link Aplikasi Mode Lokal (Tanpa Database)
-          </button>
-        </div>
-
+        <!-- One-Tap Share Link for Staff Devices -->
         <div id="shareWorkerBox" style="display:none; background:#ECFDF5; border:1.5px solid #86EFAC; border-radius:9px; padding:10px; margin-bottom:12px;">
           <div style="font-weight:800; font-size:12.5px; color:#166534; margin-bottom:4px;">
-            📲 Link Otomatis untuk HP / Tablet Internal (Tersambung Database):
+            📲 Link Otomatis untuk HP / Tablet Pekerja:
           </div>
           <div style="font-size:11.5px; color:#15803D; margin-bottom:8px;">
-            Khusus tim internal toko Anda: begitu diklik, perangkat langsung tersambung ke database bersama yang sama.
+            Kirim link ini lewat WhatsApp ke pekerja toko. Begitu diklik, HP/Tablet pekerja langsung tersambung ke database yang sama tanpa perlu pengaturan manual!
           </div>
           <button type="button" class="btn btn-green btn-sm" style="width:100%;" onclick="copyWorkerMagicLink()">
-            📋 Salin Link Koneksi Database (Internal Tim)
+            📋 Salin Link Koneksi Otomatis (Kirim ke WA Pekerja)
           </button>
         </div>
 
@@ -2397,16 +2356,11 @@
           }
         }
 
-        // Check URL parameters (?db=...&toko=... or ?mode=local)
+        // Check URL parameters (?db=...&toko=...) for 1-tap worker device onboarding
         const params = new URLSearchParams(window.location.search);
-        const urlMode = (params.get('mode') || '').toLowerCase();
         const urlDb = params.get('db');
         const urlToko = params.get('toko');
-        if (urlMode === 'local') {
-          cloudConfig.dbUrl = '';
-          localStorage.setItem(STORAGE_CLOUD_CFG, JSON.stringify(cloudConfig));
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } else if (urlDb) {
+        if (urlDb) {
           cloudConfig.dbUrl = normalizeFirebaseUrl(urlDb);
           if (urlToko) cloudConfig.storeCode = sanitizeStoreCode(urlToko);
           localStorage.setItem(STORAGE_CLOUD_CFG, JSON.stringify(cloudConfig));
@@ -3102,17 +3056,6 @@ function jsonOut_(obj) {
         pullFullCloudSnapshot(true);
       } catch (err) {
         showToast('Gagal mengirim data ke Cloud. Cek koneksi internet & pengaturan akses.', 'error');
-      }
-    }
-
-    async function copyLocalOnlyLink() {
-      const basePage = window.location.origin + window.location.pathname;
-      const localUrl = `${basePage}?mode=local`;
-      try {
-        await navigator.clipboard.writeText(localUrl);
-        showToast('🔗 Link Mode Lokal (tanpa database) berhasil disalin!');
-      } catch (e) {
-        prompt('Salin link Mode Lokal (tanpa akses database) ini:', localUrl);
       }
     }
 
@@ -5545,37 +5488,7 @@ function jsonOut_(obj) {
       } else {
         updateCloudBadgeUI('local', 'Mode Lokal');
       }
-
-      initCreditWatermarkGuard();
     })();
-
-    function initCreditWatermarkGuard() {
-      const CREDIT_HTML = '<span>Dibuat oleh <strong>Abdurrahman</strong> • Manager KDKMP Selagedang Cibeber</span>';
-      const ensureCredit = () => {
-        const mainEl = document.querySelector('main.main-wrap');
-        if (!mainEl) return;
-        let ft = document.getElementById('kdkmpCreditFooter');
-        if (!ft) {
-          ft = document.createElement('footer');
-          ft.id = 'kdkmpCreditFooter';
-          ft.className = 'app-credit-bar';
-          ft.setAttribute('aria-label', 'Kredit Pembuat Aplikasi');
-          mainEl.appendChild(ft);
-        }
-        if (ft.innerHTML.trim() !== CREDIT_HTML) {
-          ft.innerHTML = CREDIT_HTML;
-        }
-        ft.style.setProperty('display', 'block', 'important');
-        ft.style.setProperty('visibility', 'visible', 'important');
-        ft.style.setProperty('opacity', '1', 'important');
-      };
-      ensureCredit();
-      if ('MutationObserver' in window) {
-        const obs = new MutationObserver(() => ensureCredit());
-        obs.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
-      }
-      setInterval(ensureCredit, 3000);
-    }
   </script>
 </body>
 </html>
