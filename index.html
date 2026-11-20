@@ -1223,6 +1223,32 @@
       border-color: var(--excel-green);
     }
 
+        /* ================= TASTEFUL PROTECTED CREDIT WATERMARK ================= */
+    .app-credit-bar {
+      text-align: center;
+      font-size: 11px;
+      color: #64748B;
+      padding: 10px 12px 14px 12px;
+      letter-spacing: 0.15px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .app-credit-bar span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid #E2E8F0;
+      border-radius: 999px;
+      padding: 3px 11px;
+    }
+
+    .app-credit-bar strong {
+      color: #334155;
+      font-weight: 700;
+    }
+
     /* ================= MOBILE BOTTOM NAVIGATION BAR ================= */
     .mobile-bottom-nav {
       display: none;
@@ -1938,6 +1964,9 @@
       </div>
     </section>
 
+    <footer id="kdkmpCreditFooter" class="app-credit-bar" aria-label="Kredit Pembuat Aplikasi">
+      <span>Dibuat oleh <strong>Abdurrahman</strong> • Manager KDKMP Selagedang Cibeber</span>
+    </footer>
   </main>
 
   <!-- MOBILE BOTTOM NAVIGATION BAR (< 900px) -->
@@ -2165,16 +2194,28 @@
           </button>
         </div>
 
-        <!-- One-Tap Share Link for Staff Devices -->
+        <!-- Share Links: Cloud Sync OR Local-Only (No Database Access) -->
+        <div id="shareLocalBox" style="background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:9px; padding:10px; margin-bottom:10px;">
+          <div style="font-weight:800; font-size:12.5px; color:#075985; margin-bottom:4px;">
+            🔒 Bagikan Link Mode Lokal (Tanpa Akses ke Database Cloud):
+          </div>
+          <div style="font-size:11.5px; color:#0369A1; margin-bottom:8px;">
+            Koperasi lain tetap bisa memakai aplikasi ini dengan <strong>link database kosong (Mode Lokal)</strong>. Data mereka tersimpan mandiri di perangkat masing-masing dan tidak tercampur dengan database KDKMP Selagedang.
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" style="width:100%; border-color:#7DD3FC; color:#0369A1;" onclick="copyLocalOnlyLink()">
+            🔗 Salin Link Aplikasi Mode Lokal (Tanpa Database)
+          </button>
+        </div>
+
         <div id="shareWorkerBox" style="display:none; background:#ECFDF5; border:1.5px solid #86EFAC; border-radius:9px; padding:10px; margin-bottom:12px;">
           <div style="font-weight:800; font-size:12.5px; color:#166534; margin-bottom:4px;">
-            📲 Link Otomatis untuk HP / Tablet Pekerja:
+            📲 Link Otomatis untuk HP / Tablet Internal (Tersambung Database):
           </div>
           <div style="font-size:11.5px; color:#15803D; margin-bottom:8px;">
-            Kirim link ini lewat WhatsApp ke pekerja toko. Begitu diklik, HP/Tablet pekerja langsung tersambung ke database yang sama tanpa perlu pengaturan manual!
+            Khusus tim internal toko Anda: begitu diklik, perangkat langsung tersambung ke database bersama yang sama.
           </div>
           <button type="button" class="btn btn-green btn-sm" style="width:100%;" onclick="copyWorkerMagicLink()">
-            📋 Salin Link Koneksi Otomatis (Kirim ke WA Pekerja)
+            📋 Salin Link Koneksi Database (Internal Tim)
           </button>
         </div>
 
@@ -2356,11 +2397,16 @@
           }
         }
 
-        // Check URL parameters (?db=...&toko=...) for 1-tap worker device onboarding
+        // Check URL parameters (?db=...&toko=... or ?mode=local)
         const params = new URLSearchParams(window.location.search);
+        const urlMode = (params.get('mode') || '').toLowerCase();
         const urlDb = params.get('db');
         const urlToko = params.get('toko');
-        if (urlDb) {
+        if (urlMode === 'local') {
+          cloudConfig.dbUrl = '';
+          localStorage.setItem(STORAGE_CLOUD_CFG, JSON.stringify(cloudConfig));
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (urlDb) {
           cloudConfig.dbUrl = normalizeFirebaseUrl(urlDb);
           if (urlToko) cloudConfig.storeCode = sanitizeStoreCode(urlToko);
           localStorage.setItem(STORAGE_CLOUD_CFG, JSON.stringify(cloudConfig));
@@ -3056,6 +3102,17 @@ function jsonOut_(obj) {
         pullFullCloudSnapshot(true);
       } catch (err) {
         showToast('Gagal mengirim data ke Cloud. Cek koneksi internet & pengaturan akses.', 'error');
+      }
+    }
+
+    async function copyLocalOnlyLink() {
+      const basePage = window.location.origin + window.location.pathname;
+      const localUrl = `${basePage}?mode=local`;
+      try {
+        await navigator.clipboard.writeText(localUrl);
+        showToast('🔗 Link Mode Lokal (tanpa database) berhasil disalin!');
+      } catch (e) {
+        prompt('Salin link Mode Lokal (tanpa akses database) ini:', localUrl);
       }
     }
 
@@ -5224,17 +5281,19 @@ function jsonOut_(obj) {
     }
 
     /* =====================================================================
-       CITIZEN QR CARD MODAL
+       CITIZEN QR CARD MODAL (FULL CARD PNG EXPORT WITHOUT NIK & KK TEXT)
     ===================================================================== */
     function openQrCardModal(citizenId) {
       const c = citizens.find(x => x.id === citizenId);
       if (!c) return;
       const payload = `KDKMP|${c.nik || ''}|${c.kk || ''}|${c.name}`;
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payload)}`;
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=12&data=${encodeURIComponent(payload)}`;
 
       document.getElementById('qrCardName').textContent = c.name;
       document.getElementById('qrCardIds').textContent = `NIK: ${c.nik || '-'} | KK: ${c.kk || '-'}`;
-      document.getElementById('qrCardImg').src = qrUrl;
+      const imgEl = document.getElementById('qrCardImg');
+      imgEl.crossOrigin = 'anonymous';
+      imgEl.src = qrUrl;
       document.getElementById('qrCardModal').classList.add('open');
     }
 
@@ -5242,24 +5301,155 @@ function jsonOut_(obj) {
       document.getElementById('qrCardModal').classList.remove('open');
     }
 
+    function drawRoundedRectPath(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function wrapCanvasLines(ctx, text, maxWidth) {
+      const words = String(text || '').trim().split(/\s+/);
+      const lines = [];
+      let line = '';
+      for (const word of words) {
+        const test = line ? `${line} ${word}` : word;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = test;
+        }
+      }
+      if (line) lines.push(line);
+      return lines.length ? lines : ['-'];
+    }
+
     async function downloadQrCardPng() {
       const img = document.getElementById('qrCardImg');
-      const name = (document.getElementById('qrCardName').textContent || 'Warga').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const rawName = (document.getElementById('qrCardName').textContent || 'Warga').trim();
+      const orgHeader = (document.getElementById('qrCardOrgHeader').textContent || `${orgName.toUpperCase()} — KARTU KUOTA SEMBAKO`).trim();
+      const safeName = rawName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'Warga';
+
       try {
+        // Fetch QR image as blob so Canvas never gets tainted by CORS
         const resp = await fetch(img.src);
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
+        const qrBlob = await resp.blob();
+        const qrObjUrl = URL.createObjectURL(qrBlob);
+
+        const loadedQr = await new Promise((resolve, reject) => {
+          const im = new Image();
+          im.onload = () => resolve(im);
+          im.onerror = reject;
+          im.src = qrObjUrl;
+        });
+
+        // Compose high-resolution complete card PNG (excludes NIK & KK text for privacy)
+        const W = 760;
+        const padOuter = 28;
+        const cardX = padOuter;
+        const cardY = padOuter;
+        const cardW = W - padOuter * 2;
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Measure dynamic name height first
+        ctx.font = '800 38px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        const nameLines = wrapCanvasLines(ctx, rawName, cardW - 80);
+        const nameBlockH = nameLines.length * 46;
+        const qrBoxSize = 360;
+        const cardH = 128 + nameBlockH + qrBoxSize + 104;
+        const H = cardH + padOuter * 2;
+
+        canvas.width = W;
+        canvas.height = H;
+
+        // Outer soft background
+        ctx.fillStyle = '#F1F5F9';
+        ctx.fillRect(0, 0, W, H);
+
+        // Card white fill + green border
+        drawRoundedRectPath(ctx, cardX, cardY, cardW, cardH, 24);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = '#107C41';
+        ctx.stroke();
+
+        // Top green header pill / text
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#107C41';
+        ctx.font = '800 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillText(orgHeader, W / 2, cardY + 56);
+
+        // Subtle divider line under header
+        ctx.strokeStyle = '#E2E8F0';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cardX + 44, cardY + 76);
+        ctx.lineTo(cardX + cardW - 44, cardY + 76);
+        ctx.stroke();
+
+        // Citizen Name (prominent, NO NIK & KK displayed)
+        ctx.fillStyle = '#0F172A';
+        ctx.font = '800 38px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        let curY = cardY + 128;
+        for (const ln of nameLines) {
+          ctx.fillText(ln, W / 2, curY);
+          curY += 46;
+        }
+
+        // QR Frame box
+        const qrBoxX = (W - qrBoxSize) / 2;
+        const qrBoxY = curY + 10;
+        drawRoundedRectPath(ctx, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 18);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#CBD5E1';
+        ctx.stroke();
+
+        // Draw QR code inside frame
+        const qrInnerPad = 16;
+        ctx.drawImage(
+          loadedQr,
+          qrBoxX + qrInnerPad,
+          qrBoxY + qrInnerPad,
+          qrBoxSize - qrInnerPad * 2,
+          qrBoxSize - qrInnerPad * 2
+        );
+        URL.revokeObjectURL(qrObjUrl);
+
+        // Instruction footer inside card
+        const footerY = qrBoxY + qrBoxSize + 48;
+        ctx.fillStyle = '#475569';
+        ctx.font = '600 21px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillText('Tunjukkan kartu ini di kasir untuk scan otomatis 1 detik', W / 2, footerY);
+
+        // Export composed PNG
+        const finalBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const dlUrl = URL.createObjectURL(finalBlob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `Kartu_QR_${name}.png`;
+        a.href = dlUrl;
+        a.download = `Kartu_QR_${safeName}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast(`📥 Kartu QR ${name} berhasil diunduh ke perangkat!`);
+        setTimeout(() => URL.revokeObjectURL(dlUrl), 1500);
+
+        showToast(`📥 Kartu QR lengkap (${rawName}) berhasil diunduh!`);
       } catch (e) {
+        console.error('QR card export error:', e);
         window.open(img.src, '_blank');
-        showToast(`Gambar QR dibuka. Tekan & tahan gambar untuk menyimpan ke Galeri.`);
+        showToast('Gambar QR dibuka. Tekan & tahan gambar untuk menyimpan ke Galeri.');
       }
     }
 
@@ -5488,7 +5678,37 @@ function jsonOut_(obj) {
       } else {
         updateCloudBadgeUI('local', 'Mode Lokal');
       }
+
+      initCreditWatermarkGuard();
     })();
+
+    function initCreditWatermarkGuard() {
+      const CREDIT_HTML = '<span>Dibuat oleh <strong>Abdurrahman</strong> • Manager KDKMP Selagedang Cibeber</span>';
+      const ensureCredit = () => {
+        const mainEl = document.querySelector('main.main-wrap');
+        if (!mainEl) return;
+        let ft = document.getElementById('kdkmpCreditFooter');
+        if (!ft) {
+          ft = document.createElement('footer');
+          ft.id = 'kdkmpCreditFooter';
+          ft.className = 'app-credit-bar';
+          ft.setAttribute('aria-label', 'Kredit Pembuat Aplikasi');
+          mainEl.appendChild(ft);
+        }
+        if (ft.innerHTML.trim() !== CREDIT_HTML) {
+          ft.innerHTML = CREDIT_HTML;
+        }
+        ft.style.setProperty('display', 'block', 'important');
+        ft.style.setProperty('visibility', 'visible', 'important');
+        ft.style.setProperty('opacity', '1', 'important');
+      };
+      ensureCredit();
+      if ('MutationObserver' in window) {
+        const obs = new MutationObserver(() => ensureCredit());
+        obs.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
+      }
+      setInterval(ensureCredit, 3000);
+    }
   </script>
 </body>
 </html>
