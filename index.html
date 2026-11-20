@@ -2,11 +2,12 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#107C41" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Kasir%20Kuota%20KDKMP%20Selagedang%22%2C%22short_name%22%3A%22Kasir%20KDKMP%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23F1F5F9%22%2C%22theme_color%22%3A%22%23107C41%22%7D" />
   <title>Kasir Kuota Sembako — KDKMP Selagedang</title>
   <!-- Offline-capable QR & OCR libraries (graceful fallback if offline) -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -30,9 +31,10 @@
       --warn: #D97706;
       --warn-bg: #FFFBEB;
       --warn-border: #FDE68A;
-      --info: #0284C7;
+      --info: #0369A1;
+      --info-dark: #075985;
       --info-bg: #F0F9FF;
-      --info-border: #BAE6FD;
+      --info-border: #7DD3FC;
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 14px;
@@ -50,27 +52,45 @@
     html, body {
       margin: 0;
       padding: 0;
+      width: 100%;
+      max-width: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg-app);
       color: var(--text-main);
       font-size: 14px;
       line-height: 1.4;
       overflow-x: hidden;
+      overflow-x: clip;
     }
 
     /* ================= EXCEL TOP RIBBON / HEADER ================= */
     .top-ribbon {
       position: sticky;
       top: 0;
-      z-index: 50;
+      left: 0;
+      right: 0;
+      width: 100%;
+      max-width: 100%;
+      z-index: 60;
       background: var(--excel-green);
       color: #FFFFFF;
-      padding: calc(8px + var(--safe-top)) 12px 8px 12px;
+      padding: calc(8px + var(--safe-top)) 10px 8px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+    }
+
+    body.is-fullscreen .top-ribbon {
+      padding-top: max(16px, calc(10px + var(--safe-top)));
+    }
+
+    .btn-ribbon.fullscreen-active {
+      background: #DC2626 !important;
+      border-color: #FCA5A5 !important;
+      color: #FFFFFF !important;
+      font-weight: 800;
     }
 
     .brand-area {
@@ -123,25 +143,40 @@
       flex-shrink: 0;
     }
 
-    .ribbon-pill {
-      background: rgba(255, 255, 255, 0.16);
-      border: 1px solid rgba(255, 255, 255, 0.28);
+    .cloud-status-btn {
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.35);
       color: #FFFFFF;
       border-radius: 999px;
-      padding: 4px 9px;
-      font-size: 11px;
-      font-weight: 600;
+      padding: 5px 10px;
+      font-size: 11.5px;
+      font-weight: 700;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
+      cursor: pointer;
+      min-height: 34px;
     }
 
-    .dot-live {
-      width: 7px;
-      height: 7px;
+    .cloud-status-btn:active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .dot-status {
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
+      background: #FBBF24;
+      flex-shrink: 0;
+    }
+
+    .dot-status.online {
       background: #4ADE80;
-      box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3);
+      box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.35);
+    }
+
+    .dot-status.error {
+      background: #F87171;
     }
 
     .btn-ribbon {
@@ -159,10 +194,6 @@
       min-height: 34px;
     }
 
-    .btn-ribbon:active {
-      background: rgba(255, 255, 255, 0.28);
-    }
-
     /* ================= FORMULA BAR (EXCEL STYLE) ================= */
     .formula-bar {
       background: #FFFFFF;
@@ -170,9 +201,17 @@
       padding: 5px 12px;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 8px;
       font-size: 12px;
       color: var(--text-muted);
+    }
+
+    .fx-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
     }
 
     .fx-badge {
@@ -244,6 +283,7 @@
 
     /* ================= MAIN CONTAINER ================= */
     .main-wrap {
+      width: 100%;
       max-width: 1400px;
       margin: 0 auto;
       padding: 12px;
@@ -252,9 +292,16 @@
     /* Split Screen on Tablet/Desktop (>= 900px) */
     .pos-grid {
       display: grid;
-      grid-template-columns: 410px 1fr;
+      grid-template-columns: 410px minmax(0, 1fr);
       gap: 14px;
       align-items: start;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .pos-grid > * {
+      min-width: 0;
+      max-width: 100%;
     }
 
     /* ================= CARDS & PANELS ================= */
@@ -264,6 +311,8 @@
       border-radius: var(--radius-md);
       box-shadow: var(--shadow-sm);
       overflow: hidden;
+      min-width: 0;
+      max-width: 100%;
     }
 
     .card-header {
@@ -334,13 +383,9 @@
       gap: 5px;
     }
 
-    .btn-paste:active {
-      background: #DBEAFE;
-    }
-
     .search-box-wrap {
       position: relative;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .search-input {
@@ -402,7 +447,7 @@
       color: var(--excel-green);
     }
 
-    /* ================= TOUCH NUMPAD ================= */
+    /* ================= TOUCH NUMPAD (FIXED POSITION — NEVER PUSHED DOWN) ================= */
     .numpad-toggle-mobile {
       display: none;
       width: 100%;
@@ -462,7 +507,7 @@
       font-size: 13px;
     }
 
-    /* ================= SEARCH SUGGESTIONS DROPDOWN ================= */
+    /* ================= SEARCH SUGGESTIONS (BELOW NUMPAD ONLY) ================= */
     .search-results-list {
       display: flex;
       flex-direction: column;
@@ -471,7 +516,7 @@
     }
 
     .search-hit-item {
-      border: 1px solid var(--excel-border);
+      border: 1.5px solid #CBD5E1;
       background: #F8FAFC;
       border-radius: 8px;
       padding: 9px 11px;
@@ -727,7 +772,7 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 12px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .item-card {
@@ -739,11 +784,18 @@
       flex-direction: column;
       justify-content: space-between;
       box-shadow: var(--shadow-sm);
-      transition: border-color 0.15s ease;
+      transition: all 0.2s ease;
     }
 
     .item-card.eligible {
       border-color: #86EFAC;
+    }
+
+    /* Distinct state when partially used (e.g., SPHP 1/5 taken, 4 remaining) */
+    .item-card.partial-used {
+      border-color: #0284C7;
+      background: #F0F9FF;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.14);
     }
 
     .item-card.exhausted {
@@ -754,6 +806,16 @@
     .item-card.locked {
       border-color: var(--warn-border);
       background: #FFFDF7;
+    }
+
+    @keyframes pulseConfirm {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.55); }
+      50% { transform: scale(1.015); box-shadow: 0 0 0 8px rgba(2, 132, 199, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(2, 132, 199, 0); }
+    }
+
+    .item-card.just-recorded {
+      animation: pulseConfirm 0.65s ease;
     }
 
     .item-top {
@@ -778,6 +840,17 @@
       color: #475569;
     }
 
+    .partial-status-pill {
+      display: inline-block;
+      background: #0284C7;
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+
     .item-name {
       font-size: 15px;
       font-weight: 800;
@@ -799,6 +872,11 @@
       margin-bottom: 10px;
     }
 
+    .item-card.partial-used .quota-meter {
+      background: #FFFFFF;
+      border-color: #BAE6FD;
+    }
+
     .quota-numbers {
       display: flex;
       align-items: baseline;
@@ -810,6 +888,10 @@
       font-size: 18px;
       font-weight: 800;
       color: var(--excel-green);
+    }
+
+    .quota-rem.partial {
+      color: #0369A1;
     }
 
     .quota-rem.zero {
@@ -834,6 +916,10 @@
       transition: width 0.25s ease;
     }
 
+    .progress-fill.partial {
+      background: #0284C7;
+    }
+
     .progress-fill.full {
       background: var(--danger);
     }
@@ -847,6 +933,11 @@
       border-radius: 8px;
       padding: 4px;
       margin-bottom: 8px;
+    }
+
+    .item-card.partial-used .sphp-stepper {
+      background: #E0F2FE;
+      border-color: #7DD3FC;
     }
 
     .step-btn {
@@ -884,6 +975,7 @@
       justify-content: center;
       gap: 6px;
       padding: 10px 12px;
+      transition: background-color 0.2s ease, transform 0.1s ease;
     }
 
     .btn-tx-ready {
@@ -897,6 +989,23 @@
       transform: scale(0.99);
     }
 
+    /* Distinct Blue/Sapphire button when item already partially taken */
+    .btn-tx-partial {
+      background: #0369A1;
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(3, 105, 161, 0.28);
+    }
+
+    .btn-tx-partial:active {
+      background: #075985;
+      transform: scale(0.99);
+    }
+
+    .btn-tx-flash {
+      background: #15803D !important;
+      color: #FFFFFF !important;
+    }
+
     .btn-tx-locked {
       background: var(--warn-bg);
       color: #92400E;
@@ -908,6 +1017,42 @@
       background: #E2E8F0;
       color: #64748B;
       cursor: not-allowed;
+    }
+
+    /* ================= PROMINENT "SELESAI / WARGA BERIKUTNYA" BAR ================= */
+    .finish-session-bar {
+      background: #FFFBEB;
+      border: 2px solid #F59E0B;
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-finish-hero {
+      background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 10px;
+      min-height: 52px;
+      padding: 10px 20px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 3px 8px rgba(180, 83, 9, 0.32);
+      flex-shrink: 0;
+    }
+
+    .btn-finish-hero:active {
+      transform: scale(0.98);
     }
 
     /* ================= BUTTONS UTILITY ================= */
@@ -942,6 +1087,12 @@
 
     .btn-outline:active {
       background: #F1F5F9;
+    }
+
+    .btn-edit-outline {
+      background: #EFF6FF;
+      border-color: #BFDBFE;
+      color: #1D4ED8;
     }
 
     .btn-warn {
@@ -993,9 +1144,28 @@
     .table-wrap {
       width: 100%;
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       border: 1px solid var(--excel-border);
       border-radius: 8px;
       background: #FFFFFF;
+    }
+
+    .table-scroll-box {
+      max-height: 400px;
+      overflow-y: auto;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      position: relative;
+    }
+
+    .table-scroll-compact {
+      max-height: 280px;
+      overflow-y: auto;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      position: relative;
     }
 
     table.excel-table {
@@ -1004,13 +1174,16 @@
       font-size: 12.5px;
     }
 
-    table.excel-table th {
+    table.excel-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
       background: #F1F5F9;
       color: #1E293B;
       font-weight: 700;
       text-align: left;
       padding: 9px 10px;
-      border-bottom: 1.5px solid #CBD5E1;
+      box-shadow: inset 0 -1.5px 0 #CBD5E1;
       border-right: 1px solid var(--excel-grid);
       white-space: nowrap;
     }
@@ -1055,7 +1228,7 @@
       display: none;
     }
 
-    /* ================= MODAL (CAMERA SCANNER & QR CARD) ================= */
+    /* ================= MODALS ================= */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -1150,7 +1323,6 @@
       object-fit: cover;
     }
 
-    /* Target ROI box for 16-digit NIK / No. KK */
     .roi-overlay {
       position: absolute;
       inset: 0;
@@ -1274,7 +1446,7 @@
     /* ================= MOBILE (HP) RESPONSIVE BREAKPOINT (< 900px) ================= */
     @media (max-width: 899px) {
       body {
-        padding-bottom: calc(74px + var(--safe-bottom));
+        padding-bottom: calc(76px + var(--safe-bottom));
       }
 
       .formula-bar,
@@ -1282,25 +1454,62 @@
         display: none;
       }
 
-      .brand-title {
-        font-size: 13.5px;
-      }
-
-      .brand-sub {
-        font-size: 10.5px;
-      }
-
       .hide-on-mobile {
         display: none !important;
       }
 
+      /* Prevent iOS/Android auto-zoom when tapping inputs */
+      .form-input,
+      .search-input,
+      .date-input-compact,
+      select.form-input {
+        font-size: 16px !important;
+      }
+
+      .brand-title {
+        font-size: 13px;
+      }
+
+      .brand-sub {
+        font-size: 10px;
+      }
+
+      .cloud-status-btn {
+        padding: 5px 8px;
+        font-size: 11px;
+      }
+
+      .btn-ribbon {
+        padding: 6px 9px;
+        font-size: 11.5px;
+        flex-shrink: 0;
+      }
+
       .main-wrap {
-        padding: 10px;
+        padding: 8px;
       }
 
       .pos-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 10px;
+      }
+
+      .card-body {
+        padding: 10px;
+      }
+
+      .id-grid,
+      .reg-switch-row {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .scanner-sub-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .scanner-sub-actions .btn {
+        padding: 6px 4px;
+        font-size: 11px;
       }
 
       .numpad-toggle-mobile {
@@ -1321,7 +1530,15 @@
         gap: 8px;
       }
 
-      /* Sticky active citizen summary bar when scrolling down to items on HP */
+      .finish-session-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn-finish-hero {
+        width: 100%;
+      }
+
       .mobile-sticky-citizen.visible {
         display: flex;
         position: sticky;
@@ -1338,7 +1555,6 @@
         box-shadow: var(--shadow-md);
       }
 
-      /* Mobile Bottom Navigation Bar */
       .mobile-bottom-nav {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -1379,7 +1595,6 @@
         line-height: 1;
       }
 
-      /* Fullscreen camera modal on mobile phone */
       .modal-backdrop {
         padding: 0;
       }
@@ -1395,11 +1610,21 @@
         aspect-ratio: 16 / 11;
       }
 
-      /* Mobile card view for Database & History rows */
-      .mobile-card-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+      .table-scroll-box {
+        max-height: 320px;
+      }
+
+      .table-scroll-compact {
+        max-height: 240px;
+      }
+
+      .card-header {
+        flex-wrap: wrap;
+      }
+
+      .card-header .form-input {
+        max-width: 100% !important;
+        width: 100%;
       }
     }
   </style>
@@ -1412,26 +1637,29 @@
       <div class="excel-icon">X</div>
       <div class="brand-text">
         <div class="brand-title">Kasir_Kuota_KDKMP.xlsx</div>
-        <div class="brand-sub">KDKMP Selagedang • POS HP &amp; Tablet</div>
+        <div class="brand-sub">KDKMP Selagedang • Multi-Device POS</div>
       </div>
     </div>
     <div class="ribbon-actions">
-      <span class="ribbon-pill" title="Sinkronisasi Tab Aktif">
-        <span class="dot-live"></span>
-        <span id="clockBadge">Offline Ready</span>
-      </span>
-      <button type="button" class="btn-ribbon" onclick="toggleFullscreen()" title="Layar Penuh">
-        <span>⛶</span><span class="hide-on-mobile">Layar Penuh</span>
+      <button type="button" class="cloud-status-btn" id="cloudStatusBtn" onclick="openCloudModal()" title="Pengaturan Sinkronisasi Multi-Device">
+        <span class="dot-status" id="cloudDot"></span>
+        <span id="cloudStatusText">Mode Lokal</span>
+      </button>
+      <button type="button" class="btn-ribbon" id="btnFullscreenToggle" onclick="toggleFullscreen()" title="Layar Penuh">
+        <span id="fsBtnIcon">⛶</span><span id="fsBtnLabel">Full</span>
       </button>
     </div>
   </header>
 
   <!-- EXCEL FORMULA BAR (TABLET/DESKTOP) -->
   <div class="formula-bar">
-    <span class="fx-badge">fx</span>
-    <span class="formula-text" id="formulaStatus">
-      =CEK_KUOTA(Minyak:"1L/Hari/NIK"; Gas_3kg:"1Tbg/Minggu/KK"; Beras_SPHP:"5Pack/Minggu/KK")
-    </span>
+    <div class="fx-left">
+      <span class="fx-badge">fx</span>
+      <span class="formula-text" id="formulaStatus">
+        =KUOTA_KDKMP(Minyak:"1L/Hari/NIK"; Gas_3kg:"1Tbg/Minggu/KK"; Beras_SPHP:"5Pack/Minggu/KK")
+      </span>
+    </div>
+    <span style="font-size:11px; font-weight:700; color:#475569; flex-shrink:0;" id="clockBadge">--:-- WIB</span>
   </div>
 
   <!-- DESKTOP/TABLET EXCEL SHEET TABS -->
@@ -1445,11 +1673,12 @@
       </button>
     </div>
     <div class="sheet-quick-actions">
+      <button type="button" class="btn btn-outline btn-sm" onclick="openCloudModal()">☁️ Cloud Multi-Device</button>
       <button type="button" class="btn btn-outline btn-sm" onclick="exportCSV()">📥 Export .CSV</button>
       <button type="button" class="btn btn-outline btn-sm" onclick="backupJSON()">💾 Backup JSON</button>
       <label class="btn btn-outline btn-sm" style="margin:0; cursor:pointer;">
         📂 Pulihkan
-        <input type="file" accept=".json" style="display:none" onchange="restoreJSON(event)" />
+        <input type="file" accept=".json,.csv,application/json,text/csv" style="display:none" onchange="restoreJSON(event)" />
       </label>
     </div>
   </div>
@@ -1469,11 +1698,11 @@
           <div style="font-weight:800; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="stickyName">-</div>
           <div style="font-size:11px; color:#065F46; font-family:monospace;" id="stickyIds">-</div>
         </div>
-        <button type="button" class="btn btn-outline btn-sm" onclick="resetSearchFocus()">Ganti Warga</button>
+        <button type="button" class="btn btn-warn btn-sm" onclick="finishCitizenSession()">✅ Selesai</button>
       </div>
 
       <div class="pos-grid">
-        <!-- LEFT PANEL: SEARCH, SCAN, NUMPAD & CITIZEN PROFILE / REGISTRATION -->
+        <!-- LEFT PANEL: SEARCH, SCAN, FIXED NUMPAD & CITIZEN PROFILE / REGISTRATION -->
         <div class="card">
           <div class="card-header">
             <div class="card-title">🔍 Cek NIK / No. KK / Nama Warga</div>
@@ -1500,24 +1729,29 @@
                 class="search-input"
                 inputmode="search"
                 autocomplete="off"
-                placeholder="Ketik 16 digit NIK / KK atau Nama..."
+                placeholder="Ketik 16 digit NIK/KK atau Nama..."
                 oninput="handleSearchInput()"
               />
-              <button type="button" class="search-clear-btn" onclick="clearSearch()">Hapus</button>
+              <button type="button" class="search-clear-btn" onclick="finishCitizenSession()">Hapus</button>
             </div>
 
             <div class="digit-counter-row">
-              <span id="searchHintText">Masukkan 16 digit NIK atau No. KK</span>
+              <span id="searchHintText">Angka: otomatis cek saat 16 digit • Nama: ketik huruf</span>
               <span id="detectedIdTypeBadge" style="font-weight:700; color:var(--excel-green);"></span>
             </div>
 
-            <!-- Mobile Collapsible Numpad Toggle -->
-            <button type="button" class="numpad-toggle-mobile" id="numpadToggleBtn" onclick="toggleMobileNumpad()">
-              <span>🔢 Keypad Angka Sentuh (0–9)</span>
-              <span id="numpadToggleLabel">Sembunyikan ▲</span>
-            </button>
+            <!-- Mobile Controls: Toggle Numpad vs Full Keyboard (Android & iPhone) -->
+            <div style="display:flex; gap:6px; margin-bottom:8px;" class="mobile-keyboard-bar">
+              <button type="button" class="numpad-toggle-mobile" style="margin-bottom:0; flex:1;" id="numpadToggleBtn" onclick="toggleMobileNumpad()">
+                <span>🔢 Keypad Angka</span>
+                <span id="numpadToggleLabel">Sembunyikan ▲</span>
+              </button>
+              <button type="button" class="numpad-toggle-mobile" style="margin-bottom:0; width:auto; background:#EFF6FF; border-color:#BFDBFE; color:#1D4ED8;" onclick="focusKeyboardForName()">
+                <span>⌨️ Ketik Nama</span>
+              </button>
+            </div>
 
-            <!-- Touch Numpad -->
+            <!-- Touch Numpad (LOCKED IN PLACE — NEVER PUSHED DOWN BY SUGGESTIONS) -->
             <div class="numpad-grid" id="numpadGrid">
               <button type="button" class="num-key" onclick="appendDigit('1')">1</button>
               <button type="button" class="num-key" onclick="appendDigit('2')">2</button>
@@ -1528,12 +1762,12 @@
               <button type="button" class="num-key" onclick="appendDigit('7')">7</button>
               <button type="button" class="num-key" onclick="appendDigit('8')">8</button>
               <button type="button" class="num-key" onclick="appendDigit('9')">9</button>
-              <button type="button" class="num-key key-clr" onclick="clearSearch()">RESET</button>
+              <button type="button" class="num-key key-clr" onclick="finishCitizenSession()">RESET</button>
               <button type="button" class="num-key" onclick="appendDigit('0')">0</button>
               <button type="button" class="num-key key-del" onclick="backspaceDigit()">⌫ HAPUS</button>
             </div>
 
-            <!-- Matching Citizens List (for partial search / name search) -->
+            <!-- Name Search Results (ONLY shown when typing letters, rendered BELOW numpad) -->
             <div class="search-results-list" id="searchSuggestions"></div>
 
             <!-- Dynamic Area: Citizen Profile OR New Two-Way Registration Form -->
@@ -1542,7 +1776,7 @@
           </div>
         </div>
 
-        <!-- RIGHT PANEL: DATE SELECTOR, 3 COMMODITIES & RECENT LOG -->
+        <!-- RIGHT PANEL: DATE SELECTOR, 3 COMMODITIES, FINISH BUTTON & RECENT LOG -->
         <div>
           <!-- Date & Mode Bar -->
           <div class="date-toolbar">
@@ -1563,6 +1797,21 @@
           <!-- 3 Commodity Cards -->
           <div class="commodities-grid" id="commoditiesContainer">
             <!-- Rendered dynamically by JS -->
+          </div>
+
+          <!-- Prominent End-of-Person Session Bar (Appears whenever a citizen is selected or typed) -->
+          <div class="finish-session-bar" id="finishSessionBar" style="display:none;">
+            <div>
+              <div style="font-weight:800; font-size:13.5px; color:#92400E;" id="finishBarTitle">
+                Sedang melayani warga...
+              </div>
+              <div style="font-size:11.5px; color:#78350F;">
+                Tekan tombol di kanan jika transaksi warga ini sudah selesai untuk lanjut ke pembeli berikutnya.
+              </div>
+            </div>
+            <button type="button" class="btn-finish-hero" onclick="finishCitizenSession()">
+              <span>✅</span> SELESAI / WARGA BERIKUTNYA
+            </button>
           </div>
 
           <!-- Today's / Selected Date Recent Transactions -->
@@ -1639,17 +1888,18 @@
         </div>
       </div>
 
-      <!-- Data Backup & Export Card (Especially handy on HP) -->
+      <!-- Multi-Device Sync & Export Card -->
       <div class="card" style="margin-bottom:12px;">
         <div class="card-header">
-          <div class="card-title">💾 Export Laporan &amp; Cadangan Data Offline</div>
+          <div class="card-title">☁️ Sinkronisasi Multi-Device &amp; Export Excel</div>
         </div>
         <div class="card-body" style="display:flex; flex-wrap:wrap; gap:8px;">
-          <button type="button" class="btn btn-green" onclick="exportCSV()">📥 Download Rekap Excel (.CSV)</button>
+          <button type="button" class="btn btn-green" onclick="openCloudModal()">☁️ Atur Database Bersama (Multi-Device)</button>
+          <button type="button" class="btn btn-outline" onclick="exportCSV()">📥 Download Rekap Excel (.CSV)</button>
           <button type="button" class="btn btn-outline" onclick="backupJSON()">💾 Simpan Cadangan (.JSON)</button>
           <label class="btn btn-outline" style="margin:0; cursor:pointer;">
             📂 Pulihkan dari File (.JSON)
-            <input type="file" accept=".json" style="display:none" onchange="restoreJSON(event)" />
+            <input type="file" accept=".json,.csv,application/json,text/csv" style="display:none" onchange="restoreJSON(event)" />
           </label>
         </div>
       </div>
@@ -1657,12 +1907,16 @@
       <!-- Citizen Database Card -->
       <div class="card" style="margin-bottom:12px;">
         <div class="card-header">
-          <div class="card-title">👥 Database Warga Terdaftar</div>
-          <input type="text" id="dbSearchInput" class="form-input" style="max-width:220px; min-height:36px; font-size:12.5px;" placeholder="Cari nama / NIK / KK..." oninput="renderDatabaseTab()" />
+          <div class="card-title">👥 Database Warga Terdaftar <span class="badge-digit ok" id="citizenCountBadge">0</span></div>
+          <input type="text" id="dbSearchInput" class="form-input" style="max-width:230px; min-height:36px; font-size:12.5px;" placeholder="Cari nama / NIK / KK..." oninput="renderDatabaseTab()" />
         </div>
         <div class="card-body">
+          <div id="genericWargaAlertBox" style="display:none; background:#FEF2F2; border:1px solid #FECACA; border-radius:8px; padding:9px 11px; margin-bottom:9px; font-size:12px; color:#991B1B;">
+            <strong>⚠️ Terdeteksi <span id="genericWargaCountText">0</span> data bernama "Warga":</strong> Ketuk tombol <strong>✏️ Edit</strong> pada baris terkait untuk mengisi nama aslinya, atau klik <strong>📂 Pulihkan</strong> untuk mengimpor ulang file backup (.JSON / .CSV) agar nama asli terisi otomatis.
+          </div>
           <div class="filter-pills">
             <button type="button" class="filter-chip active" id="fltAll" onclick="setDbFilter('all')">Semua Data</button>
+            <button type="button" class="filter-chip" id="fltGenericName" onclick="setDbFilter('generic_name')" style="display:none; border-color:#FCA5A5; color:#B91C1C;">⚠️ Nama "Warga" (<span id="fltGenericCount">0</span>)</button>
             <button type="button" class="filter-chip" id="fltNoKk" onclick="setDbFilter('missing_kk')">⚠️ Belum Ada No. KK</button>
             <button type="button" class="filter-chip" id="fltNoNik" onclick="setDbFilter('missing_nik')">⚠️ Belum Ada NIK</button>
             <button type="button" class="filter-chip" id="fltComplete" onclick="setDbFilter('complete')">✅ Data Lengkap</button>
@@ -1674,7 +1928,8 @@
       <!-- Full Transaction History Card -->
       <div class="card">
         <div class="card-header">
-          <div class="card-title">📜 Seluruh Riwayat Pengambilan Sembako</div>
+          <div class="card-title">📜 Seluruh Riwayat Pengambilan Sembako <span class="badge-digit ok" id="txCountBadge">0</span></div>
+          <input type="text" id="txSearchInput" class="form-input" style="max-width:230px; min-height:36px; font-size:12.5px;" placeholder="Cari riwayat warga / tanggal / barang..." oninput="renderDatabaseTab()" />
         </div>
         <div class="card-body" id="fullTxTableContainer"></div>
       </div>
@@ -1696,13 +1951,226 @@
       <span class="bnav-icon">🗂️</span>
       <span>Database</span>
     </button>
-    <button type="button" class="bnav-btn" onclick="exportCSV()">
-      <span class="bnav-icon">📥</span>
-      <span>Export CSV</span>
+    <button type="button" class="bnav-btn" onclick="openCloudModal()">
+      <span class="bnav-icon">☁️</span>
+      <span>Cloud Sync</span>
     </button>
   </nav>
 
-  <!-- ==================== MODAL 1: LIVE CAMERA SCANNER (QR & OCR) ==================== -->
+  <!-- ==================== MODAL 1: EDIT TRANSACTION QUANTITY & DATE ==================== -->
+  <div class="modal-backdrop" id="editTxModal">
+    <div class="modal-card" style="max-width:420px;">
+      <div class="modal-header">
+        <div style="font-weight:800; font-size:14px;">✏️ Koreksi / Edit Transaksi</div>
+        <button type="button" class="modal-close" onclick="closeEditTxModal()">✕</button>
+      </div>
+      <div class="card-body">
+        <input type="hidden" id="editTxId" />
+        <div style="background:#F8FAFC; border:1px solid var(--excel-border); border-radius:8px; padding:10px; margin-bottom:10px;">
+          <div style="font-weight:800; font-size:14px;" id="editTxCitizenName">-</div>
+          <div style="font-size:12px; color:#475569; margin-top:2px;" id="editTxItemInfo">-</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <span>Jumlah Pengambilan Baru</span>
+            <span id="editTxMaxHint" style="color:var(--excel-green);">Maks: 5</span>
+          </label>
+          <div class="sphp-stepper" style="margin-bottom:4px;">
+            <button type="button" class="step-btn" onclick="changeEditTxQty(-1)">−</button>
+            <span class="step-val" id="editTxQtyDisplay">1</span>
+            <button type="button" class="step-btn" onclick="changeEditTxQty(1)">+</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><span>Tanggal Transaksi</span></label>
+          <input type="date" id="editTxDateInput" class="form-input" onchange="recalcEditTxBounds()" />
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button type="button" class="btn btn-green" style="flex:1; min-height:44px;" onclick="saveEditedTransaction()">
+            💾 Simpan Koreksi
+          </button>
+          <button type="button" class="btn btn-danger-outline" style="min-height:44px;" onclick="deleteFromEditModal()">
+            🗑️ Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 1B: EDIT CITIZEN DATA ==================== -->
+  <div class="modal-backdrop" id="editCitizenModal">
+    <div class="modal-card" style="max-width:440px;">
+      <div class="modal-header">
+        <div style="font-weight:800; font-size:14px;">✏️ Edit Data Warga Terdaftar</div>
+        <button type="button" class="modal-close" onclick="closeEditCitizenModal()">✕</button>
+      </div>
+      <div class="card-body">
+        <input type="hidden" id="editCitizenId" />
+        <div class="form-group">
+          <label class="form-label"><span>Nama Lengkap Warga *</span></label>
+          <input type="text" id="editCitizenName" class="form-input" placeholder="Nama lengkap..." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <span>No. NIK (16 Digit — untuk Minyak Goreng)</span>
+            <span id="editCitizenNikLen" style="color:var(--excel-green);">0/16</span>
+          </label>
+          <input type="tel" maxlength="16" id="editCitizenNik" class="form-input mono-input" placeholder="Kosongkan jika belum ada..." oninput="updateEditCitizenDigitCounters()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <span>No. KK (16 Digit — untuk Gas 3kg &amp; SPHP)</span>
+            <span id="editCitizenKkLen" style="color:var(--excel-green);">0/16</span>
+          </label>
+          <input type="tel" maxlength="16" id="editCitizenKk" class="form-input mono-input" placeholder="Kosongkan jika belum ada..." oninput="updateEditCitizenDigitCounters()" />
+        </div>
+        <div style="font-size:11.5px; color:#475569; background:#F8FAFC; border:1px solid var(--excel-border); border-radius:7px; padding:8px; margin-bottom:12px;">
+          Perubahan Nama, NIK, atau No. KK akan otomatis diperbarui pada riwayat transaksi warga ini.
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn btn-green" style="flex:1; min-height:44px;" onclick="saveEditedCitizen()">
+            💾 Simpan Perubahan
+          </button>
+          <button type="button" class="btn btn-outline" style="min-height:44px;" onclick="closeEditCitizenModal()">
+            Batal
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 1C: CUSTOM CONFIRMATION DIALOG (REPLACES BLOCKED BROWSER CONFIRM) ==================== -->
+  <div class="modal-backdrop" id="confirmActionModal" style="z-index:260;">
+    <div class="modal-card" style="max-width:410px;">
+      <div class="modal-header" style="background:#B91C1C;">
+        <div style="font-weight:800; font-size:14px;" id="confirmModalTitle">⚠️ Konfirmasi Hapus Data</div>
+        <button type="button" class="modal-close" onclick="closeConfirmModal()">✕</button>
+      </div>
+      <div class="card-body">
+        <div style="font-size:13.5px; color:#0F172A; line-height:1.5; margin-bottom:10px;" id="confirmModalMessage">
+          Apakah Anda yakin ingin menghapus data ini?
+        </div>
+        <label id="confirmExtraOptionWrap" style="display:none; align-items:flex-start; gap:8px; background:#FEF2F2; border:1px solid #FECACA; border-radius:8px; padding:9px; margin-bottom:12px; font-size:12.5px; font-weight:700; color:#991B1B; cursor:pointer;">
+          <input type="checkbox" id="confirmExtraCheckbox" checked style="width:18px; height:18px; margin-top:1px; accent-color:#DC2626;" />
+          <span id="confirmExtraLabel">Sekaligus hapus semua riwayat transaksi warga ini</span>
+        </label>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn" id="confirmModalYesBtn" style="flex:1; min-height:46px; background:#DC2626; color:#FFFFFF; font-size:13.5px;" onclick="executeConfirmedAction()">
+            🗑️ Ya, Hapus Permanen
+          </button>
+          <button type="button" class="btn btn-outline" style="min-height:46px; min-width:90px;" onclick="closeConfirmModal()">
+            Batal
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: MULTI-DEVICE CLOUD SYNC SETUP ==================== -->
+  <div class="modal-backdrop" id="cloudModal">
+    <div class="modal-card" style="max-width:540px;">
+      <div class="modal-header">
+        <div style="font-weight:800; font-size:14px;">☁️ Database Bersama Multi-Device (Google Sheets / Firebase)</div>
+        <button type="button" class="modal-close" onclick="closeCloudModal()">✕</button>
+      </div>
+      <div class="card-body">
+        <div id="cloudBannerBox" style="padding:10px 12px; border-radius:8px; margin-bottom:10px; font-size:12.5px; font-weight:700; background:#FFFBEB; border:1px solid #FDE68A; color:#92400E;">
+          Status: Mode Lokal (data masih tersimpan di perangkat ini saja).
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <span>URL Server Database (Google Apps Script atau Firebase) *</span>
+            <span id="detectedProviderBadge" style="color:#0369A1;">Auto-Deteksi</span>
+          </label>
+          <input
+            type="url"
+            id="cloudDbUrlInput"
+            class="form-input mono-input"
+            style="font-size:12px;"
+            placeholder="Tempel link https://script.google.com/macros/s/.../exec atau Firebase..."
+            oninput="previewCloudProvider()"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <span>Kode Toko / Gerai (Sama di Semua HP &amp; Tablet)</span>
+          </label>
+          <input
+            type="text"
+            id="cloudStoreCodeInput"
+            class="form-input mono-input"
+            value="kdkmp-selagedang"
+            placeholder="kdkmp-selagedang"
+          />
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <button type="button" class="btn btn-green" style="flex:1; min-height:44px;" onclick="saveCloudConfig()">
+            🔗 Hubungkan &amp; Sinkronkan
+          </button>
+          <button type="button" class="btn btn-outline" style="min-height:44px;" onclick="pushAllLocalToCloud()">
+            ⬆️ Kirim Data Lokal ke Cloud
+          </button>
+        </div>
+
+        <!-- One-Tap Share Link for Staff Devices -->
+        <div id="shareWorkerBox" style="display:none; background:#ECFDF5; border:1.5px solid #86EFAC; border-radius:9px; padding:10px; margin-bottom:12px;">
+          <div style="font-weight:800; font-size:12.5px; color:#166534; margin-bottom:4px;">
+            📲 Link Otomatis untuk HP / Tablet Pekerja:
+          </div>
+          <div style="font-size:11.5px; color:#15803D; margin-bottom:8px;">
+            Kirim link ini lewat WhatsApp ke pekerja toko. Begitu diklik, HP/Tablet pekerja langsung tersambung ke database yang sama tanpa perlu pengaturan manual!
+          </div>
+          <button type="button" class="btn btn-green btn-sm" style="width:100%;" onclick="copyWorkerMagicLink()">
+            📋 Salin Link Koneksi Otomatis (Kirim ke WA Pekerja)
+          </button>
+        </div>
+
+        <!-- OPTION A: GOOGLE SHEETS (RECOMMENDED — NEVER BLOCKED IN INDONESIA) -->
+        <details open style="background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:8px; padding:10px 12px; font-size:12px; color:#1E293B; margin-bottom:8px;">
+          <summary style="font-weight:800; cursor:pointer; color:#166534;">
+            ✅ CARA PALING MUDAH &amp; ANTI GAGAL: Pakai Google Sheets (2 Menit)
+          </summary>
+          <div style="margin-top:8px; line-height:1.55;">
+            <p style="margin:0 0 6px 0;">Jika <strong>Firebase gagal diakses/diblokir jaringan</strong>, gunakan Google Sheets Anda sendiri. Data otomatis masuk ke tabel Spreadsheet dan tersinkron ke semua HP/Tablet:</p>
+            <ol style="margin:0 0 8px 0; padding-left:18px;">
+              <li>Buka <strong>sheets.google.com</strong> (atau <code>sheets.new</code>) lalu buat Spreadsheet kosong baru, beri nama misalnya <code>Database KDKMP Selagedang</code>.</li>
+              <li>Klik menu atas <strong>Ekstensi → Apps Script</strong>.</li>
+              <li>Hapus semua tulisan di editor, lalu ketuk tombol di bawah ini untuk menyalin kode siap pakai dan <strong>Tempel (Paste)</strong> ke editor Apps Script:</li>
+            </ol>
+            <button type="button" class="btn btn-green btn-sm" style="width:100%; margin-bottom:8px;" onclick="copyAppsScriptTemplate()">
+              📋 Salin Kode Google Apps Script (Siap Tempel)
+            </button>
+            <ol start="4" style="margin:0; padding-left:18px;">
+              <li>Klik tombol biru <strong>Terapkan (Deploy) → Deployment baru</strong>.</li>
+              <li>Klik ikon roda gigi ⚙️ di sebelah "Pilih jenis" → pilih <strong>Aplikasi Web (Web app)</strong>.</li>
+              <li>Pada bagian <strong>Yang memiliki akses (Who has access)</strong>, ubah menjadi <strong>Siapa saja (Anyone)</strong> → klik <strong>Terapkan (Deploy)</strong> → Izinkan akses akun Google Anda.</li>
+              <li>Salin <strong>URL Aplikasi Web</strong> (yang berakhiran <code>/exec</code>), lalu tempel ke kolom <strong>URL Server Database</strong> di atas!</li>
+            </ol>
+          </div>
+        </details>
+
+        <!-- OPTION B: FIREBASE TROUBLESHOOTING -->
+        <details style="background:#F8FAFC; border:1px solid var(--excel-border); border-radius:8px; padding:9px 11px; font-size:12px; color:#334155;">
+          <summary style="font-weight:800; cursor:pointer; color:#475569;">
+            🔥 Solusi Jika Tetap Ingin Memakai Firebase
+          </summary>
+          <ul style="margin:8px 0 0 0; padding-left:18px; line-height:1.55;">
+            <li><strong>Gagal buka console.firebase.google.com:</strong> Buka <em>Pengaturan HP → Jaringan &amp; Internet → DNS Pribadi</em>, ketik <code>dns.google</code> lalu simpan.</li>
+            <li><strong>Gagal saat Create Project:</strong> Matikan (geser ke kiri/OFF) pilihan <em>"Enable Google Analytics for this project"</em> agar pembuatan project tidak macet.</li>
+            <li><strong>Jangan salin link halaman Console:</strong> Link yang benar berakhiran <code>.firebasedatabase.app</code> (bukan <code>console.firebase.google.com/...</code>) dan harus memilih <strong>Start in test mode</strong>.</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: LIVE CAMERA SCANNER (QR & OCR) ==================== -->
   <div class="modal-backdrop" id="scannerModal">
     <div class="modal-card mobile-full-modal">
       <div class="modal-header">
@@ -1746,13 +2214,12 @@
           </label>
         </div>
 
-        <!-- Detected 16-digit numbers buttons (for KK with multiple NIKs) -->
         <div class="detected-chips" id="detectedNumbersList"></div>
       </div>
     </div>
   </div>
 
-  <!-- ==================== MODAL 2: CITIZEN QR CARD ==================== -->
+  <!-- ==================== MODAL 4: CITIZEN QR CARD ==================== -->
   <div class="modal-backdrop" id="qrCardModal">
     <div class="modal-card" style="max-width:400px;">
       <div class="modal-header">
@@ -1779,10 +2246,12 @@
 
   <script>
     /* =====================================================================
-       STATE & PERSISTENCE (COMPATIBLE WITH EXISTING KDKMP DATA)
+       STATE, LOCAL PERSISTENCE & MULTI-DEVICE CLOUD SYNC ENGINE
     ===================================================================== */
     const STORAGE_CITIZENS = 'kdkmp_citizens_v3';
     const STORAGE_TX = 'kdkmp_tx_v3';
+    const STORAGE_CLOUD_CFG = 'kdkmp_cloud_cfg_v1';
+    const STORAGE_PENDING_SYNC = 'kdkmp_pending_sync_v1';
     const CHANNEL_NAME = 'kdkmp_pos_sync_v3';
 
     let citizens = [];
@@ -1793,17 +2262,30 @@
     let regMode = 'nik'; // 'nik' | 'kk'
     let dbFilter = 'all';
     let mobileNumpadVisible = true;
+    let lastRecordedItemKey = null;
+
+    // Edit modal state
+    let editingTxObj = null;
+    let editTxQtyVal = 1;
+    let editTxMaxAllowed = 5;
+
+    // Cloud Sync state
+    let cloudConfig = { dbUrl: '', storeCode: 'kdkmp-selagedang' };
+    let cloudConnected = false;
+    let cloudEventSource = null;
+    let cloudPollTimer = null;
+    let pendingSyncOps = []; // [{ op: 'put'|'del', path: 'citizens/id', data: obj }]
 
     // Camera & OCR state
     let cameraStream = null;
     let currentFacingMode = 'environment';
     let torchEnabled = false;
-    let scanMode = 'line'; // 'line' | 'full'
+    let scanMode = 'line';
     let qrLoopTimer = null;
     let tesseractWorker = null;
     let isOcrBusy = false;
 
-    // BroadcastChannel for multi-tab live sync
+    // Same-device multi-tab sync
     const syncChannel = ('BroadcastChannel' in window) ? new BroadcastChannel(CHANNEL_NAME) : null;
     if (syncChannel) {
       syncChannel.onmessage = (ev) => {
@@ -1821,7 +2303,11 @@
       }
     });
 
-    function notifySync() {
+    window.addEventListener('online', () => {
+      flushPendingCloudOps();
+    });
+
+    function notifyLocalTabs() {
       if (syncChannel) {
         syncChannel.postMessage({ type: 'DATA_UPDATED', ts: Date.now() });
       }
@@ -1834,6 +2320,26 @@
         citizens = rawC ? JSON.parse(rawC) : [];
         transactions = rawT ? JSON.parse(rawT) : [];
 
+        const rawPending = localStorage.getItem(STORAGE_PENDING_SYNC);
+        pendingSyncOps = rawPending ? JSON.parse(rawPending) : [];
+
+        const rawCloud = localStorage.getItem(STORAGE_CLOUD_CFG);
+        if (rawCloud) {
+          cloudConfig = Object.assign({ dbUrl: '', storeCode: 'kdkmp-selagedang' }, JSON.parse(rawCloud));
+        }
+
+        // Check URL parameters (?db=...&toko=...) for 1-tap worker device onboarding
+        const params = new URLSearchParams(window.location.search);
+        const urlDb = params.get('db');
+        const urlToko = params.get('toko');
+        if (urlDb) {
+          cloudConfig.dbUrl = normalizeFirebaseUrl(urlDb);
+          if (urlToko) cloudConfig.storeCode = sanitizeStoreCode(urlToko);
+          localStorage.setItem(STORAGE_CLOUD_CFG, JSON.stringify(cloudConfig));
+          // Clean sensitive URL parameters from address bar
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
         // Migrate older v1/v2 keys seamlessly if v3 is empty
         if (migrateLegacy && citizens.length === 0 && transactions.length === 0) {
           const oldC = localStorage.getItem('kdkmp_citizens_v2') || localStorage.getItem('kdkmp_citizens_v1') || localStorage.getItem('sembako_citizens');
@@ -1843,38 +2349,698 @@
             if (Array.isArray(parsedC) && parsedC.length > 0) {
               citizens = parsedC.map(c => ({
                 id: c.id || uid(),
-                name: c.name || c.nama || 'Warga',
-                nik: cleanDigits(c.nik || ''),
-                kk: cleanDigits(c.kk || ''),
+                name: extractPersonName(c, 'Warga'),
+                nik: extractIdField(c, 'nik'),
+                kk: extractIdField(c, 'kk'),
                 extraNiks: Array.isArray(c.extraNiks) ? c.extraNiks : [],
                 createdAt: c.createdAt || new Date().toISOString()
               }));
-              saveCitizens(false);
+              saveCitizensLocal(false);
             }
           }
           if (oldT) {
             const parsedT = JSON.parse(oldT);
             if (Array.isArray(parsedT) && parsedT.length > 0) {
-              transactions = parsedT;
-              saveTransactions(false);
+              transactions = parsedT.map(t => ({
+                ...t,
+                name: extractPersonName(t, 'Warga'),
+                nik: extractIdField(t, 'nik'),
+                kk: extractIdField(t, 'kk')
+              }));
+              saveTransactionsLocal(false);
             }
           }
         }
+
+        // Cross-reference & repair any accidental generic "Warga" names from transactions or legacy storage
+        autoHealWargaNames(false);
       } catch (err) {
         console.error('Storage read error:', err);
-        citizens = [];
-        transactions = [];
       }
     }
 
-    function saveCitizens(broadcast = true) {
-      localStorage.setItem(STORAGE_CITIZENS, JSON.stringify(citizens));
-      if (broadcast) notifySync();
+    function isGenericWargaName(name) {
+      const s = String(name || '').trim().toLowerCase();
+      return !s || s === 'warga' || s === 'warga qr' || s === '-' || s === 'null' || s === 'undefined' || s === 'unknown' || /^\d+$/.test(s);
     }
 
-    function saveTransactions(broadcast = true) {
+    function pickBetterName(existingName, incomingName) {
+      const exReal = !isGenericWargaName(existingName);
+      const inReal = !isGenericWargaName(incomingName);
+      if (inReal) return String(incomingName).trim();
+      if (exReal) return String(existingName).trim();
+      return String(existingName || incomingName || 'Warga').trim() || 'Warga';
+    }
+
+    function extractPersonName(obj, fallback = 'Warga') {
+      if (!obj || typeof obj !== 'object') return fallback;
+      const candidateKeys = [
+        'name', 'nama', 'namawarga', 'namalengkap', 'fullname',
+        'namapembeli', 'pembeli', 'pelanggan', 'customer', 'buyer',
+        'citizenname', 'kepalakeluarga', 'namakk', 'namaktp', 'displayname'
+      ];
+      const entries = Object.entries(obj);
+      for (const target of candidateKeys) {
+        for (const [k, v] of entries) {
+          const normKey = String(k).toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (normKey === target && typeof v === 'string' && !isGenericWargaName(v)) {
+            return v.trim();
+          }
+        }
+      }
+      // Check nested citizen/warga object if present
+      for (const nestedKey of ['citizen', 'warga', 'user', 'profile']) {
+        if (obj[nestedKey] && typeof obj[nestedKey] === 'object') {
+          const nestedName = extractPersonName(obj[nestedKey], '');
+          if (!isGenericWargaName(nestedName)) return nestedName;
+        }
+      }
+      // Last-resort fuzzy key match containing "nama" or "name"
+      for (const [k, v] of entries) {
+        const normKey = String(k).toLowerCase().replace(/[^a-z0-9]/g, '');
+        if ((normKey.includes('nama') || normKey.includes('name')) && typeof v === 'string' && !isGenericWargaName(v)) {
+          return v.trim();
+        }
+      }
+      return fallback;
+    }
+
+    function extractIdField(obj, kind) {
+      if (!obj || typeof obj !== 'object') return '';
+      const entries = Object.entries(obj);
+      for (const [k, v] of entries) {
+        const normKey = String(k).toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (kind === 'nik' && (normKey === 'nik' || normKey === 'nonik' || normKey === 'nonik16digit' || normKey === 'nomornik')) {
+          const d = cleanDigits(v);
+          if (d) return d;
+        }
+        if (kind === 'kk' && (normKey === 'kk' || normKey === 'nokk' || normKey === 'nokk16digit' || normKey === 'nomorkk')) {
+          const d = cleanDigits(v);
+          if (d) return d;
+        }
+      }
+      return '';
+    }
+
+    function autoHealWargaNames(syncToCloud = false) {
+      const nameById = new Map();
+      const nameByNik = new Map();
+      const nameByKk = new Map();
+
+      const registerKnownName = (rec) => {
+        if (!rec || typeof rec !== 'object') return;
+        const nm = extractPersonName(rec, '');
+        if (isGenericWargaName(nm)) return;
+        const id = rec.citizenId || rec.id;
+        const nik = extractIdField(rec, 'nik') || cleanDigits(rec.nik || '');
+        const kk = extractIdField(rec, 'kk') || cleanDigits(rec.kk || '');
+        if (id && !nameById.has(id)) nameById.set(id, nm);
+        if (nik.length === 16 && !nameByNik.has(nik)) nameByNik.set(nik, nm);
+        if (kk.length === 16 && !nameByKk.has(kk)) nameByKk.set(kk, nm);
+      };
+
+      // Harvest all real names from current citizens, current transactions, and legacy storage keys
+      citizens.forEach(registerKnownName);
+      transactions.forEach(registerKnownName);
+      ['kdkmp_citizens_v2', 'kdkmp_citizens_v1', 'sembako_citizens', 'kdkmp_tx_v2', 'kdkmp_tx_v1', 'sembako_transactions'].forEach(lsKey => {
+        try {
+          const raw = localStorage.getItem(lsKey);
+          if (!raw) return;
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) arr.forEach(registerKnownName);
+        } catch (e) {}
+      });
+
+      let citizensFixed = 0;
+      citizens.forEach(c => {
+        if (isGenericWargaName(c.name)) {
+          const recovered =
+            (c.id && nameById.get(c.id)) ||
+            (c.nik && c.nik.length === 16 && nameByNik.get(c.nik)) ||
+            (c.kk && c.kk.length === 16 && nameByKk.get(c.kk));
+          if (recovered && !isGenericWargaName(recovered)) {
+            c.name = recovered;
+            citizensFixed++;
+            if (syncToCloud) queueCloudSync('put', `citizens/${c.id}`, c);
+          }
+        }
+      });
+
+      let txsFixed = 0;
+      transactions.forEach(t => {
+        if (isGenericWargaName(t.name)) {
+          const recovered =
+            (t.citizenId && nameById.get(t.citizenId)) ||
+            (t.nik && t.nik.length === 16 && nameByNik.get(t.nik)) ||
+            (t.kk && t.kk.length === 16 && nameByKk.get(t.kk));
+          if (recovered && !isGenericWargaName(recovered)) {
+            t.name = recovered;
+            txsFixed++;
+            if (syncToCloud) queueCloudSync('put', `transactions/${t.id}`, t);
+          }
+        }
+      });
+
+      if (citizensFixed > 0) saveCitizensLocal(false);
+      if (txsFixed > 0) saveTransactionsLocal(false);
+      return citizensFixed + txsFixed;
+    }
+
+    function saveCitizensLocal(broadcast = true) {
+      localStorage.setItem(STORAGE_CITIZENS, JSON.stringify(citizens));
+      if (broadcast) notifyLocalTabs();
+    }
+
+    function saveTransactionsLocal(broadcast = true) {
       localStorage.setItem(STORAGE_TX, JSON.stringify(transactions));
-      if (broadcast) notifySync();
+      if (broadcast) notifyLocalTabs();
+    }
+
+    function savePendingOps() {
+      localStorage.setItem(STORAGE_PENDING_SYNC, JSON.stringify(pendingSyncOps));
+    }
+
+    /* =====================================================================
+       MULTI-DEVICE REAL-TIME CLOUD SYNC (GOOGLE SHEETS APPS SCRIPT + FIREBASE)
+    ===================================================================== */
+    const APPS_SCRIPT_TEMPLATE = `// KODE SINKRONISASI MULTI-DEVICE KDKMP SELAGEDANG (GOOGLE SHEETS)
+function doGet(e) {
+  var toko = (e && e.parameter && e.parameter.toko) ? e.parameter.toko : 'kdkmp-selagedang';
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var dbSheet = getOrCreateSheet_(ss, 'RAW_DB_' + toko, ['Key', 'JSON', 'UpdatedAt']);
+  var rows = dbSheet.getDataRange().getValues();
+  var citizens = {};
+  var transactions = {};
+  for (var i = 1; i < rows.length; i++) {
+    var key = String(rows[i][0] || '');
+    var raw = String(rows[i][1] || '');
+    if (!key || !raw) continue;
+    try {
+      var obj = JSON.parse(raw);
+      if (key.indexOf('citizens/') === 0) citizens[obj.id] = obj;
+      if (key.indexOf('transactions/') === 0) transactions[obj.id] = obj;
+    } catch (err) {}
+  }
+  // Also read manual name fixes from Data_Warga sheet if present
+  var sWarga = ss.getSheetByName('Data_Warga');
+  if (sWarga && sWarga.getLastRow() > 1) {
+    var wData = sWarga.getDataRange().getValues();
+    var nameByNik = {}, nameByKk = {};
+    for (var w = 1; w < wData.length; w++) {
+      var wName = String(wData[w][0] || '').trim();
+      var wNik = String(wData[w][1] || '').replace(/\D/g, '');
+      var wKk = String(wData[w][2] || '').replace(/\D/g, '');
+      if (wName && wName.toLowerCase() !== 'warga') {
+        if (wNik.length === 16) nameByNik[wNik] = wName;
+        if (wKk.length === 16) nameByKk[wKk] = wName;
+      }
+    }
+    Object.keys(citizens).forEach(function(cid) {
+      var c = citizens[cid];
+      if (!c.name || String(c.name).trim().toLowerCase() === 'warga') {
+        var fixed = (c.nik && nameByNik[c.nik]) || (c.kk && nameByKk[c.kk]);
+        if (fixed) c.name = fixed;
+      }
+    });
+  }
+  return jsonOut_({ ok: true, citizens: citizens, transactions: transactions });
+}
+
+function doPost(e) {
+  var payload = JSON.parse(e.postData.contents);
+  var toko = payload.toko || 'kdkmp-selagedang';
+  var ops = payload.ops || [];
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var dbSheet = getOrCreateSheet_(ss, 'RAW_DB_' + toko, ['Key', 'JSON', 'UpdatedAt']);
+  var data = dbSheet.getDataRange().getValues();
+  var rowMap = {};
+  for (var i = 1; i < data.length; i++) {
+    rowMap[String(data[i][0])] = i + 1;
+  }
+  ops.forEach(function(item) {
+    var key = item.relPath;
+    if (item.op === 'del') {
+      if (rowMap[key]) {
+        dbSheet.deleteRow(rowMap[key]);
+        rowMap = rebuildMap_(dbSheet);
+      }
+    } else if (item.op === 'put' && item.data) {
+      var rowVals = [key, JSON.stringify(item.data), new Date().toISOString()];
+      if (rowMap[key]) {
+        dbSheet.getRange(rowMap[key], 1, 1, 3).setValues([rowVals]);
+      } else {
+        dbSheet.appendRow(rowVals);
+        rowMap[key] = dbSheet.getLastRow();
+      }
+    }
+  });
+  syncReadableSheets_(ss, dbSheet);
+  return jsonOut_({ ok: true });
+}
+
+function syncReadableSheets_(ss, dbSheet) {
+  var rows = dbSheet.getDataRange().getValues();
+  var wRows = [['Nama Warga', 'No. NIK (16 Digit)', 'No. KK (16 Digit)', 'Status Data']];
+  var tRows = [['Tanggal', 'Jam', 'Nama Warga', 'No. NIK', 'No. KK', 'Komoditas', 'Jumlah']];
+  for (var i = 1; i < rows.length; i++) {
+    var key = String(rows[i][0] || '');
+    try {
+      var obj = JSON.parse(rows[i][1]);
+      if (key.indexOf('citizens/') === 0) {
+        var st = (obj.nik && obj.kk) ? 'Lengkap' : (!obj.kk ? 'Kurang No. KK' : 'Kurang NIK');
+        wRows.push([obj.name || '', "'" + (obj.nik || ''), "'" + (obj.kk || ''), st]);
+      } else if (key.indexOf('transactions/') === 0) {
+        tRows.push([obj.date || '', obj.time || '', obj.name || '', "'" + (obj.nik || ''), "'" + (obj.kk || ''), obj.itemLabel || '', obj.qty || 0]);
+      }
+    } catch (e) {}
+  }
+  var sWarga = getOrCreateSheet_(ss, 'Data_Warga', wRows[0]);
+  sWarga.clearContents();
+  sWarga.getRange(1, 1, wRows.length, 4).setValues(wRows);
+
+  var sTx = getOrCreateSheet_(ss, 'Riwayat_Transaksi', tRows[0]);
+  sTx.clearContents();
+  sTx.getRange(1, 1, tRows.length, 7).setValues(tRows);
+}
+
+function getOrCreateSheet_(ss, name, headers) {
+  var sh = ss.getSheetByName(name);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+    sh.appendRow(headers);
+  }
+  return sh;
+}
+
+function rebuildMap_(sh) {
+  var d = sh.getDataRange().getValues();
+  var m = {};
+  for (var i = 1; i < d.length; i++) m[String(d[i][0])] = i + 1;
+  return m;
+}
+
+function jsonOut_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}`;
+
+    function detectCloudProvider(url) {
+      const u = String(url || '').toLowerCase();
+      if (!u) return 'none';
+      if (u.includes('script.google.com') || u.includes('script.googleusercontent.com')) return 'gas';
+      if (u.includes('console.firebase.google.com')) return 'firebase_console_wrong';
+      if (u.includes('firebasedatabase.app') || u.includes('firebaseio.com')) return 'firebase';
+      return 'unknown';
+    }
+
+    function normalizeFirebaseUrl(url) {
+      let u = String(url || '').trim();
+      if (!u) return '';
+      if (!u.startsWith('http://') && !u.startsWith('https://')) {
+        u = 'https://' + u;
+      }
+      if (detectCloudProvider(u) === 'firebase') {
+        u = u.replace(/\/+$/, '');
+      }
+      return u;
+    }
+
+    function sanitizeStoreCode(code) {
+      return String(code || 'kdkmp-selagedang').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-') || 'kdkmp-selagedang';
+    }
+
+    function getStoreBaseEndpoint() {
+      if (!cloudConfig.dbUrl) return '';
+      const base = normalizeFirebaseUrl(cloudConfig.dbUrl);
+      const code = sanitizeStoreCode(cloudConfig.storeCode);
+      return `${base}/stores/${code}`;
+    }
+
+    function updateCloudBadgeUI(state, label) {
+      const dot = document.getElementById('cloudDot');
+      const txt = document.getElementById('cloudStatusText');
+      dot.className = 'dot-status' + (state === 'online' ? ' online' : (state === 'error' ? ' error' : ''));
+      txt.textContent = label;
+    }
+
+    function previewCloudProvider() {
+      const val = document.getElementById('cloudDbUrlInput').value;
+      const p = detectCloudProvider(val);
+      const badge = document.getElementById('detectedProviderBadge');
+      if (p === 'gas') {
+        badge.innerHTML = '<span style="color:#15803D;">✅ Terdeteksi: Google Sheets / Apps Script</span>';
+      } else if (p === 'firebase') {
+        badge.innerHTML = '<span style="color:#15803D;">✅ Terdeteksi: Firebase Realtime DB</span>';
+      } else if (p === 'firebase_console_wrong') {
+        badge.innerHTML = '<span style="color:#DC2626;">⚠️ Salah Link! Bukan link Console</span>';
+      } else {
+        badge.textContent = 'Auto-Deteksi';
+      }
+    }
+
+    async function copyAppsScriptTemplate() {
+      try {
+        await navigator.clipboard.writeText(APPS_SCRIPT_TEMPLATE);
+        showToast('📋 Kode Google Apps Script berhasil disalin! Silakan Tempel di editor Apps Script.');
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = APPS_SCRIPT_TEMPLATE;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('📋 Kode Google Apps Script disalin!');
+      }
+    }
+
+    function queueCloudSync(op, relPath, dataObj = null) {
+      if (!cloudConfig.dbUrl) return;
+      pendingSyncOps.push({ op, relPath, data: dataObj, ts: Date.now() });
+      savePendingOps();
+      flushPendingCloudOps();
+    }
+
+    async function flushPendingCloudOps() {
+      if (!cloudConfig.dbUrl || pendingSyncOps.length === 0) return;
+      const provider = detectCloudProvider(cloudConfig.dbUrl);
+      const code = sanitizeStoreCode(cloudConfig.storeCode);
+
+      if (provider === 'gas') {
+        const batch = [...pendingSyncOps];
+        try {
+          const resp = await fetch(normalizeFirebaseUrl(cloudConfig.dbUrl), {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ toko: code, ops: batch })
+          });
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          pendingSyncOps.splice(0, batch.length);
+          savePendingOps();
+          updateCloudBadgeUI('online', 'Sheets Aktif');
+        } catch (err) {
+          console.warn('GAS push deferred:', err);
+          updateCloudBadgeUI('error', `Tertunda (${pendingSyncOps.length})`);
+        }
+        return;
+      }
+
+      const base = getStoreBaseEndpoint();
+      const copy = [...pendingSyncOps];
+      for (let i = 0; i < copy.length; i++) {
+        const item = copy[i];
+        try {
+          const endpoint = `${base}/${item.relPath}.json`;
+          const resp = await fetch(endpoint, {
+            method: item.op === 'del' ? 'DELETE' : 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: item.op === 'del' ? undefined : JSON.stringify(item.data)
+          });
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          pendingSyncOps.shift();
+          savePendingOps();
+        } catch (err) {
+          console.warn('Cloud push deferred (offline/network):', err);
+          updateCloudBadgeUI('error', `Tertunda (${pendingSyncOps.length})`);
+          return;
+        }
+      }
+      updateCloudBadgeUI('online', 'Cloud Aktif');
+    }
+
+    async function pullFullCloudSnapshot(silent = false) {
+      if (!cloudConfig.dbUrl) return false;
+      const provider = detectCloudProvider(cloudConfig.dbUrl);
+      const code = sanitizeStoreCode(cloudConfig.storeCode);
+
+      try {
+        let fetchUrl = '';
+        if (provider === 'gas') {
+          const rawUrl = normalizeFirebaseUrl(cloudConfig.dbUrl);
+          const sep = rawUrl.includes('?') ? '&' : '?';
+          fetchUrl = `${rawUrl}${sep}toko=${encodeURIComponent(code)}&t=${Date.now()}`;
+        } else {
+          fetchUrl = `${getStoreBaseEndpoint()}.json`;
+        }
+
+        const resp = await fetch(fetchUrl, { cache: 'no-store' });
+        if (!resp.ok) {
+          if (resp.status === 401 || resp.status === 403) {
+            throw new Error('PERMISSION_DENIED');
+          }
+          throw new Error('HTTP_' + resp.status);
+        }
+        const data = await resp.json();
+        mergeCloudSnapshot(data);
+        cloudConnected = true;
+        updateCloudBadgeUI('online', provider === 'gas' ? 'Sheets Aktif' : 'Cloud Aktif');
+        if (!silent) {
+          showToast(provider === 'gas'
+            ? '✅ Terhubung ke Google Sheets Bersama! Data otomatis tersinkron.'
+            : '☁️ Terhubung ke Database Bersama! Data tersinkron.');
+        }
+        return true;
+      } catch (err) {
+        console.error('Cloud fetch error:', err);
+        cloudConnected = false;
+        updateCloudBadgeUI('error', 'Cloud Offline');
+        if (!silent) {
+          if (err.message === 'PERMISSION_DENIED') {
+            showToast('Akses ditolak (401): Pastikan Rules Firebase memakai Test Mode (true) atau Apps Script diset "Siapa saja (Anyone)".', 'error');
+          } else {
+            showToast('Gagal terhubung ke server. Periksa URL & koneksi internet Anda.', 'error');
+          }
+        }
+        return false;
+      }
+    }
+
+    function mergeCloudSnapshot(data) {
+      if (!data || typeof data !== 'object') return;
+
+      if (data.citizens !== undefined) {
+        const deletedCitizenIds = new Set(
+          pendingSyncOps.filter(op => op.op === 'del' && op.relPath.startsWith('citizens/'))
+            .map(op => op.relPath.split('/')[1])
+        );
+        const cloudCitizens = (data.citizens && typeof data.citizens === 'object')
+          ? Object.values(data.citizens).filter(c => c && c.id && !deletedCitizenIds.has(c.id))
+          : [];
+
+        const localNameMap = new Map();
+        citizens.forEach(c => { if (c && c.id && !isGenericWargaName(c.name)) localNameMap.set(c.id, c.name); });
+
+        const map = new Map();
+        pendingSyncOps.filter(op => op.op === 'put' && op.relPath.startsWith('citizens/'))
+          .forEach(op => { if (op.data && op.data.id) map.set(op.data.id, op.data); });
+
+        cloudCitizens.forEach(c => {
+          const cleanName = extractPersonName(c, c.name || 'Warga');
+          const bestName = pickBetterName(localNameMap.get(c.id), cleanName);
+          const mergedC = Object.assign({}, c, { name: bestName });
+          map.set(c.id, mergedC);
+        });
+
+        citizens = Array.from(map.values()).sort((a, b) =>
+          String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
+        );
+        saveCitizensLocal(true);
+      }
+
+      if (data.transactions !== undefined) {
+        const deletedIds = new Set(
+          pendingSyncOps.filter(op => op.op === 'del' && op.relPath.startsWith('transactions/'))
+            .map(op => op.relPath.split('/')[1])
+        );
+        const cloudTxs = (data.transactions && typeof data.transactions === 'object')
+          ? Object.values(data.transactions).filter(t => t && t.id && !deletedIds.has(t.id))
+          : [];
+
+        const localTxNameMap = new Map();
+        transactions.forEach(t => { if (t && t.id && !isGenericWargaName(t.name)) localTxNameMap.set(t.id, t.name); });
+
+        const txMap = new Map();
+        pendingSyncOps.filter(op => op.op === 'put' && op.relPath.startsWith('transactions/'))
+          .forEach(op => { if (op.data && op.data.id) txMap.set(op.data.id, op.data); });
+
+        cloudTxs.forEach(t => {
+          const cleanName = extractPersonName(t, t.name || 'Warga');
+          const bestName = pickBetterName(localTxNameMap.get(t.id), cleanName);
+          txMap.set(t.id, Object.assign({}, t, { name: bestName }));
+        });
+
+        transactions = Array.from(txMap.values()).sort((a, b) => {
+          const cmpDate = String(b.date || '').localeCompare(String(a.date || ''));
+          if (cmpDate !== 0) return cmpDate;
+          return String(b.time || '').localeCompare(String(a.time || ''));
+        });
+        saveTransactionsLocal(true);
+      }
+
+      autoHealWargaNames(false);
+      refreshAllUI();
+    }
+
+    function startCloudRealtimeListener() {
+      stopCloudRealtimeListener();
+      if (!cloudConfig.dbUrl) {
+        updateCloudBadgeUI('local', 'Mode Lokal');
+        return;
+      }
+
+      const provider = detectCloudProvider(cloudConfig.dbUrl);
+      pullFullCloudSnapshot(true).then(() => flushPendingCloudOps());
+
+      if (provider === 'firebase' && 'EventSource' in window) {
+        try {
+          cloudEventSource = new EventSource(`${getStoreBaseEndpoint()}.json`);
+          cloudEventSource.addEventListener('put', () => pullFullCloudSnapshot(true));
+          cloudEventSource.addEventListener('patch', () => pullFullCloudSnapshot(true));
+        } catch (e) {}
+      }
+
+      cloudPollTimer = setInterval(() => {
+        if (navigator.onLine && cloudConfig.dbUrl) {
+          flushPendingCloudOps();
+          pullFullCloudSnapshot(true);
+        }
+      }, 8000);
+    }
+
+    function stopCloudRealtimeListener() {
+      if (cloudEventSource) {
+        cloudEventSource.close();
+        cloudEventSource = null;
+      }
+      if (cloudPollTimer) {
+        clearInterval(cloudPollTimer);
+        cloudPollTimer = null;
+      }
+    }
+
+    function openCloudModal() {
+      document.getElementById('cloudDbUrlInput').value = cloudConfig.dbUrl || '';
+      document.getElementById('cloudStoreCodeInput').value = cloudConfig.storeCode || 'kdkmp-selagedang';
+      previewCloudProvider();
+      refreshCloudModalStatus();
+      document.getElementById('cloudModal').classList.add('open');
+    }
+
+    function closeCloudModal() {
+      document.getElementById('cloudModal').classList.remove('open');
+    }
+
+    function refreshCloudModalStatus() {
+      const banner = document.getElementById('cloudBannerBox');
+      const shareBox = document.getElementById('shareWorkerBox');
+      const provider = detectCloudProvider(cloudConfig.dbUrl);
+      if (cloudConfig.dbUrl) {
+        const srvName = provider === 'gas' ? 'Google Sheets (Apps Script)' : 'Firebase Realtime DB';
+        banner.style.background = '#ECFDF5';
+        banner.style.borderColor = '#86EFAC';
+        banner.style.color = '#166534';
+        banner.innerHTML = `✅ Terhubung ke <strong>${srvName}</strong> • Kode Toko: <strong>${escapeHtml(cloudConfig.storeCode)}</strong><br><span style="font-size:11px; font-weight:500;">Semua HP &amp; Tablet yang memakai link sama otomatis berbagi data warga &amp; penjualan secara real-time.</span>`;
+        shareBox.style.display = 'block';
+      } else {
+        banner.style.background = '#FFFBEB';
+        banner.style.borderColor = '#FDE68A';
+        banner.style.color = '#92400E';
+        banner.textContent = 'Status: Mode Lokal (data masih tersimpan di perangkat ini saja).';
+        shareBox.style.display = 'none';
+      }
+    }
+
+    async function saveCloudConfig() {
+      const rawUrl = document.getElementById('cloudDbUrlInput').value;
+      const rawCode = document.getElementById('cloudStoreCodeInput').value;
+      const cleanUrl = normalizeFirebaseUrl(rawUrl);
+      const cleanCode = sanitizeStoreCode(rawCode);
+
+      if (!cleanUrl) {
+        cloudConfig = { dbUrl: '', storeCode: cleanCode };
+        localStorage.setItem(STORAGE_CLOUD_CFG, JSON.stringify(cloudConfig));
+        stopCloudRealtimeListener();
+        updateCloudBadgeUI('local', 'Mode Lokal');
+        refreshCloudModalStatus();
+        showToast('Beralih ke Mode Lokal.');
+        return;
+      }
+
+      const provider = detectCloudProvider(cleanUrl);
+      if (provider === 'firebase_console_wrong') {
+        showToast('Itu link halaman Console Firebase, bukan link Database! Gunakan URL Google Apps Script (/exec) atau URL .firebasedatabase.app', 'error');
+        return;
+      }
+
+      cloudConfig = { dbUrl: cleanUrl, storeCode: cleanCode };
+      localStorage.setItem(STORAGE_CLOUD_CFG, JSON.stringify(cloudConfig));
+      refreshCloudModalStatus();
+
+      const ok = await pullFullCloudSnapshot(false);
+      if (ok) {
+        startCloudRealtimeListener();
+        if (citizens.length > 0 || transactions.length > 0) {
+          pushAllLocalToCloud();
+        }
+      }
+    }
+
+    async function pushAllLocalToCloud() {
+      if (!cloudConfig.dbUrl) {
+        showToast('Isi & simpan URL Google Apps Script / Firebase terlebih dahulu.', 'warn');
+        return;
+      }
+      if (citizens.length === 0 && transactions.length === 0) {
+        showToast('Tidak ada data lokal untuk dikirim.', 'warn');
+        return;
+      }
+
+      const provider = detectCloudProvider(cloudConfig.dbUrl);
+      const code = sanitizeStoreCode(cloudConfig.storeCode);
+
+      try {
+        if (provider === 'gas') {
+          const ops = [];
+          citizens.forEach(c => ops.push({ op: 'put', relPath: `citizens/${c.id}`, data: c }));
+          transactions.forEach(t => ops.push({ op: 'put', relPath: `transactions/${t.id}`, data: t }));
+          const resp = await fetch(normalizeFirebaseUrl(cloudConfig.dbUrl), {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ toko: code, ops })
+          });
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          showToast(`⬆️ Berhasil mengirim ${citizens.length} warga & ${transactions.length} transaksi ke Google Sheets!`);
+          pullFullCloudSnapshot(true);
+          return;
+        }
+
+        const base = getStoreBaseEndpoint();
+        const citizensObj = {};
+        citizens.forEach(c => { citizensObj[c.id] = c; });
+        const txObj = {};
+        transactions.forEach(t => { txObj[t.id] = t; });
+
+        const resp = await fetch(`${base}.json`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ citizens: citizensObj, transactions: txObj })
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        showToast(`⬆️ Berhasil mengirim ${citizens.length} warga & ${transactions.length} transaksi ke Cloud!`);
+        pullFullCloudSnapshot(true);
+      } catch (err) {
+        showToast('Gagal mengirim data ke Cloud. Cek koneksi internet & pengaturan akses.', 'error');
+      }
+    }
+
+    async function copyWorkerMagicLink() {
+      if (!cloudConfig.dbUrl) return;
+      const basePage = window.location.origin + window.location.pathname;
+      const magicUrl = `${basePage}?db=${encodeURIComponent(cloudConfig.dbUrl)}&toko=${encodeURIComponent(cloudConfig.storeCode)}`;
+      try {
+        await navigator.clipboard.writeText(magicUrl);
+        showToast('📋 Link otomatis disalin! Tinggal Tempel & kirim ke WhatsApp pekerja.');
+      } catch (e) {
+        prompt('Salin link ini dan kirim ke WhatsApp pekerja:', magicUrl);
+      }
     }
 
     /* =====================================================================
@@ -1889,8 +3055,7 @@
     }
 
     function getTodayStr() {
-      const d = new Date();
-      return formatDateLocal(d);
+      return formatDateLocal(new Date());
     }
 
     function getYesterdayStr() {
@@ -1913,7 +3078,6 @@
       return `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1] || m} ${y}`;
     }
 
-    // ISO Week key (Monday - Sunday) for weekly quotas (Gas 3kg & Beras SPHP)
     function getWeekKey(dateStr) {
       const parts = dateStr.split('-').map(Number);
       const d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
@@ -1924,27 +3088,25 @@
       return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
     }
 
-    function getQuotaStatusForCitizen(citizen, refDateStr) {
+    function getQuotaStatusForCitizen(citizen, refDateStr, excludeTxId = null) {
       const targetWeek = getWeekKey(refDateStr);
 
-      // 1. Minyak Goreng: 1 Liter / day per NIK
       let oilUsed = 0;
       if (citizen && citizen.nik && citizen.nik.length === 16) {
         oilUsed = transactions
-          .filter(t => t.item === 'minyak' && t.date === refDateStr && t.nik === citizen.nik)
+          .filter(t => t.id !== excludeTxId && t.item === 'minyak' && t.date === refDateStr && t.nik === citizen.nik)
           .reduce((sum, t) => sum + Number(t.qty || 0), 0);
       }
 
-      // 2 & 3. Gas 3kg (1/week per KK) & Beras SPHP (5/week per KK)
       let gasUsed = 0;
       let riceUsed = 0;
       if (citizen && citizen.kk && citizen.kk.length === 16) {
         gasUsed = transactions
-          .filter(t => t.item === 'gas' && getWeekKey(t.date) === targetWeek && t.kk === citizen.kk)
+          .filter(t => t.id !== excludeTxId && t.item === 'gas' && getWeekKey(t.date) === targetWeek && t.kk === citizen.kk)
           .reduce((sum, t) => sum + Number(t.qty || 0), 0);
 
         riceUsed = transactions
-          .filter(t => t.item === 'beras' && getWeekKey(t.date) === targetWeek && t.kk === citizen.kk)
+          .filter(t => t.id !== excludeTxId && t.item === 'beras' && getWeekKey(t.date) === targetWeek && t.kk === citizen.kk)
           .reduce((sum, t) => sum + Number(t.qty || 0), 0);
       }
 
@@ -1963,7 +3125,7 @@
     }
 
     /* =====================================================================
-       SEARCH, NUMPAD & CITIZEN LOOKUP
+       SEARCH, FIXED NUMPAD & EXACT CITIZEN LOOKUP (FIXES #1 & #2)
     ===================================================================== */
     function findCitizenBy16Digit(digits) {
       if (!digits || digits.length !== 16) return null;
@@ -1977,69 +3139,104 @@
     function handleSearchInput() {
       const input = document.getElementById('searchInput');
       const raw = input.value;
-      const digits = cleanDigits(raw);
+      const trimmed = raw.trim();
+      const digits = cleanDigits(trimmed);
+      const isPureDigits = /^[0-9\s-]+$/.test(trimmed) && digits.length > 0;
 
       // Update digit counter badge
       const counter = document.getElementById('digitCounter');
       counter.textContent = `${digits.length} / 16 digit`;
       counter.classList.toggle('ok', digits.length === 16);
 
-      // Exact 16-digit match check
-      if (digits.length === 16) {
-        const found = findCitizenBy16Digit(digits);
-        if (found) {
-          selectedCitizenId = found.id;
-          sphpQty = 1;
-          document.getElementById('searchSuggestions').innerHTML = '';
-          document.getElementById('detectedIdTypeBadge').textContent =
-            found.nik === digits ? '✓ Cocok No. NIK' : '✓ Cocok No. KK';
-        } else {
-          selectedCitizenId = null;
-          document.getElementById('detectedIdTypeBadge').textContent = '🆕 Nomor Belum Terdaftar';
-        }
-      } else {
-        document.getElementById('detectedIdTypeBadge').textContent = '';
-        // Partial search suggestions (by name or partial digits)
-        const q = raw.trim().toLowerCase();
-        if (q.length >= 2) {
-          const matches = citizens.filter(c =>
-            (c.name && c.name.toLowerCase().includes(q)) ||
-            (c.nik && c.nik.includes(digits) && digits.length >= 3) ||
-            (c.kk && c.kk.includes(digits) && digits.length >= 3)
-          ).slice(0, 5);
+      // CASE A: User is typing numbers (NIK / No. KK)
+      if (isPureDigits) {
+        // NEVER pop up partial suggestion list while typing 1-15 digits (keeps numpad steady & avoids clutter!)
+        document.getElementById('searchSuggestions').innerHTML = '';
 
-          renderSuggestions(matches);
-          if (!matches.some(m => m.id === selectedCitizenId)) {
+        if (digits.length === 16) {
+          const found = findCitizenBy16Digit(digits);
+          if (found) {
+            selectedCitizenId = found.id;
+            sphpQty = 1;
+            lastRecordedItemKey = null;
+            document.getElementById('detectedIdTypeBadge').textContent =
+              found.nik === digits ? '✓ Ditemukan (No. NIK)' : '✓ Ditemukan (No. KK)';
+          } else {
             selectedCitizenId = null;
+            lastRecordedItemKey = null;
+            document.getElementById('detectedIdTypeBadge').textContent = '🆕 Nomor Baru (Belum Terdaftar)';
           }
         } else {
-          document.getElementById('searchSuggestions').innerHTML = '';
+          selectedCitizenId = null;
+          lastRecordedItemKey = null;
+          document.getElementById('detectedIdTypeBadge').textContent = `Kurang ${16 - digits.length} digit`;
+        }
+      }
+      // CASE B: User is typing a Name (contains letters)
+      else if (trimmed.length >= 1) {
+        document.getElementById('detectedIdTypeBadge').textContent = 'Mode Cari Nama';
+        const tokens = trimmed.toLowerCase().split(/\s+/).filter(Boolean);
+
+        // Accurate multi-word match against citizen name ONLY (no unrelated prefix dumps)
+        const matches = citizens
+          .filter(c => {
+            const cname = String(c.name || '').toLowerCase();
+            return tokens.every(tok => cname.includes(tok));
+          })
+          .sort((a, b) => {
+            const qLow = trimmed.toLowerCase();
+            const aStarts = String(a.name || '').toLowerCase().startsWith(qLow) ? 0 : 1;
+            const bStarts = String(b.name || '').toLowerCase().startsWith(qLow) ? 0 : 1;
+            if (aStarts !== bStarts) return aStarts - bStarts;
+            return String(a.name || '').localeCompare(String(b.name || ''));
+          })
+          .slice(0, 8);
+
+        if (!matches.some(m => m.id === selectedCitizenId)) {
           selectedCitizenId = null;
         }
+        renderNameSuggestions(matches, trimmed);
+      }
+      // CASE C: Empty input
+      else {
+        selectedCitizenId = null;
+        lastRecordedItemKey = null;
+        document.getElementById('searchSuggestions').innerHTML = '';
+        document.getElementById('detectedIdTypeBadge').textContent = '';
       }
 
       renderCitizenPanel();
       renderCommodities();
-      updateStickyMobileBanner();
+      updateSessionBars();
     }
 
-    function renderSuggestions(matches) {
+    function renderNameSuggestions(matches, queryText) {
       const box = document.getElementById('searchSuggestions');
-      if (!matches || matches.length === 0) {
-        box.innerHTML = '';
+      if (matches.length === 0) {
+        box.innerHTML = `
+          <div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:9px 11px; font-size:12px; color:#92400E;">
+            Tidak ditemukan nama <strong>"${escapeHtml(queryText)}"</strong> di database. Untuk warga baru, masukkan <strong>16 digit NIK / No. KK</strong>.
+          </div>
+        `;
         return;
       }
-      box.innerHTML = matches.map(c => `
-        <div class="search-hit-item" onclick="selectCitizen('${c.id}')">
-          <div>
-            <div style="font-weight:800; font-size:13px;">${escapeHtml(c.name)}</div>
-            <div style="font-family:monospace; font-size:11px; color:#475569;">
-              NIK: ${c.nik || '<i>Belum ada</i>'} • KK: ${c.kk || '<i>Belum ada</i>'}
-            </div>
-          </div>
-          <span class="tag tag-green">Pilih →</span>
+
+      box.innerHTML = `
+        <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:2px;">
+          Hasil Pencarian Nama (${matches.length} cocok):
         </div>
-      `).join('');
+        ${matches.map(c => `
+          <div class="search-hit-item" onclick="selectCitizen('${c.id}')">
+            <div>
+              <div style="font-weight:800; font-size:13.5px; color:#0F172A;">${escapeHtml(c.name)}</div>
+              <div style="font-family:monospace; font-size:11px; color:#475569;">
+                NIK: ${c.nik || 'Belum ada'} • KK: ${c.kk || 'Belum ada'}
+              </div>
+            </div>
+            <span class="tag tag-green">Buka Profil →</span>
+          </div>
+        `).join('')}
+      `;
     }
 
     function selectCitizen(id) {
@@ -2047,21 +3244,36 @@
       if (!c) return;
       selectedCitizenId = c.id;
       sphpQty = 1;
+      lastRecordedItemKey = null;
       document.getElementById('searchInput').value = c.nik || c.kk || c.name;
       const dLen = cleanDigits(document.getElementById('searchInput').value).length;
       document.getElementById('digitCounter').textContent = `${dLen} / 16 digit`;
       document.getElementById('digitCounter').classList.toggle('ok', dLen === 16);
       document.getElementById('searchSuggestions').innerHTML = '';
+      document.getElementById('detectedIdTypeBadge').textContent = '✓ Warga Aktif';
       renderCitizenPanel();
       renderCommodities();
-      updateStickyMobileBanner();
+      updateSessionBars();
+    }
+
+    function triggerHaptic(ms = 18) {
+      if (navigator && typeof navigator.vibrate === 'function') {
+        try { navigator.vibrate(ms); } catch (e) {}
+      }
+    }
+
+    function focusKeyboardForName() {
+      const input = document.getElementById('searchInput');
+      input.focus();
+      showToast('⌨️ Keyboard HP aktif — silakan ketik nama warga.');
     }
 
     function appendDigit(d) {
+      triggerHaptic(16);
       const input = document.getElementById('searchInput');
       const curDigits = cleanDigits(input.value);
       if (curDigits.length >= 16) {
-        showToast('Sudah 16 digit. Tekan RESET untuk nomor baru.', 'warn');
+        showToast('Sudah 16 digit. Tekan SELESAI / RESET untuk warga berikutnya.', 'warn');
         return;
       }
       input.value = curDigits + d;
@@ -2074,19 +3286,22 @@
       handleSearchInput();
     }
 
-    function clearSearch() {
+    // FIX #4: Prominent End-of-Person Session Reset
+    function finishCitizenSession() {
+      clearDraftRegForm();
+      const hadCitizen = Boolean(selectedCitizenId || document.getElementById('searchInput').value.trim());
       const input = document.getElementById('searchInput');
       input.value = '';
       selectedCitizenId = null;
       sphpQty = 1;
+      lastRecordedItemKey = null;
       document.getElementById('searchSuggestions').innerHTML = '';
+      document.getElementById('detectedIdTypeBadge').textContent = '';
       handleSearchInput();
-    }
-
-    function resetSearchFocus() {
-      clearSearch();
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      document.getElementById('searchInput').focus();
+      if (hadCitizen) {
+        showToast('✅ Sesi selesai. Siap melayani warga berikutnya.');
+      }
     }
 
     async function pasteFromClipboard() {
@@ -2098,7 +3313,7 @@
         handleSearchInput();
         showToast('Teks berhasil ditempel.');
       } catch (e) {
-        showToast('Izin tempel otomatis diblokir browser. Tekan & tahan di kotak pencarian lalu pilih Tempel.', 'warn');
+        showToast('Tekan & tahan di kotak pencarian lalu pilih Tempel.', 'warn');
         document.getElementById('searchInput').focus();
       }
     }
@@ -2111,23 +3326,66 @@
       lbl.textContent = mobileNumpadVisible ? 'Sembunyikan ▲' : 'Tampilkan ▼';
     }
 
-    function updateStickyMobileBanner() {
-      const banner = document.getElementById('mobileStickyCitizen');
+    function updateSessionBars() {
       const c = citizens.find(x => x.id === selectedCitizenId);
+      const rawVal = document.getElementById('searchInput').value.trim();
+      const stickyBanner = document.getElementById('mobileStickyCitizen');
+      const finishBar = document.getElementById('finishSessionBar');
+
       if (c) {
         document.getElementById('stickyName').textContent = `👤 ${c.name}`;
-        document.getElementById('stickyIds').textContent =
-          `NIK: ${c.nik || '-'} | KK: ${c.kk || '-'}`;
-        banner.classList.add('visible');
+        document.getElementById('stickyIds').textContent = `NIK: ${c.nik || '-'} | KK: ${c.kk || '-'}`;
+        stickyBanner.classList.add('visible');
+
+        finishBar.style.display = 'flex';
+        document.getElementById('finishBarTitle').textContent = `Selesai melayani ${c.name}?`;
+      } else if (rawVal.length > 0) {
+        stickyBanner.classList.remove('visible');
+        finishBar.style.display = 'flex';
+        document.getElementById('finishBarTitle').textContent = 'Batalkan / Reset input saat ini?';
       } else {
-        banner.classList.remove('visible');
+        stickyBanner.classList.remove('visible');
+        finishBar.style.display = 'none';
       }
     }
+
+    // Keyboard Escape shortcut to finish current person's session quickly
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const openModals = document.querySelectorAll('.modal-backdrop.open');
+        if (openModals.length > 0) {
+          openModals.forEach(m => m.classList.remove('open'));
+          stopCameraStream();
+        } else if (selectedCitizenId || document.getElementById('searchInput').value.trim()) {
+          finishCitizenSession();
+        }
+      }
+    });
 
     /* =====================================================================
        CITIZEN PROFILE & TWO-WAY GRADUAL REGISTRATION PANEL
     ===================================================================== */
+    let draftRegState = { primaryDigits: '', name: '', secondId: '' };
+
+    function captureDraftRegForm(currentPrimaryDigits = '') {
+      const nameEl = document.getElementById('regNameInput');
+      const secondEl = document.getElementById('regSecondIdInput');
+      if (nameEl || secondEl) {
+        draftRegState = {
+          primaryDigits: currentPrimaryDigits || draftRegState.primaryDigits,
+          name: nameEl ? nameEl.value : draftRegState.name,
+          secondId: secondEl ? secondEl.value : draftRegState.secondId
+        };
+      }
+    }
+
+    function clearDraftRegForm() {
+      draftRegState = { primaryDigits: '', name: '', secondId: '' };
+    }
+
     function setRegMode(mode) {
+      const curDigits = cleanDigits(document.getElementById('searchInput').value.trim());
+      captureDraftRegForm(curDigits);
       regMode = mode;
       renderCitizenPanel();
     }
@@ -2137,6 +3395,13 @@
       const rawVal = document.getElementById('searchInput').value.trim();
       const digits = cleanDigits(rawVal);
       const selected = citizens.find(x => x.id === selectedCitizenId);
+
+      // Preserve in-progress registration inputs before rebuilding DOM
+      const activeEl = document.activeElement;
+      const activeFieldId = activeEl && (activeEl.id === 'regNameInput' || activeEl.id === 'regSecondIdInput') ? activeEl.id : null;
+      const selStart = activeFieldId ? activeEl.selectionStart : null;
+      const selEnd = activeFieldId ? activeEl.selectionEnd : null;
+      captureDraftRegForm(digits);
 
       // CASE 1: Existing Citizen Found
       if (selected) {
@@ -2203,6 +3468,8 @@
       // CASE 2: 16 Digits Entered & Not Registered -> Two-Way Flexible Registration Form
       if (digits.length === 16) {
         const isNikMode = (regMode === 'nik');
+        const savedName = (draftRegState.primaryDigits === digits) ? draftRegState.name : '';
+        const savedSecond = (draftRegState.primaryDigits === digits) ? draftRegState.secondId : '';
         container.innerHTML = `
           <div class="reg-box">
             <div style="font-weight:800; font-size:13px; color:#166534; margin-bottom:6px;">
@@ -2219,7 +3486,7 @@
 
             <div class="form-group">
               <label class="form-label"><span>Nama Lengkap Pembeli *</span></label>
-              <input type="text" id="regNameInput" class="form-input" placeholder="Masukkan nama sesuai KTP / KK..." />
+              <input type="text" id="regNameInput" class="form-input" placeholder="Masukkan nama sesuai KTP / KK..." oninput="captureDraftRegForm('${digits}')" />
             </div>
 
             ${isNikMode ? `
@@ -2228,7 +3495,7 @@
                   <span>No. KK (16 Digit)</span>
                   <span style="color:#15803D;">Opsional jika hanya beli Minyak</span>
                 </label>
-                <input type="tel" maxlength="16" id="regSecondIdInput" class="form-input mono-input" placeholder="Kosongkan jika tidak bawa KK..." />
+                <input type="tel" maxlength="16" id="regSecondIdInput" class="form-input mono-input" placeholder="Kosongkan jika tidak bawa KK..." oninput="captureDraftRegForm('${digits}')" />
               </div>
             ` : `
               <div class="form-group">
@@ -2236,7 +3503,7 @@
                   <span>No. NIK Pembeli (16 Digit)</span>
                   <span style="color:#15803D;">Opsional jika hanya bawa KK</span>
                 </label>
-                <input type="tel" maxlength="16" id="regSecondIdInput" class="form-input mono-input" placeholder="Kosongkan jika tidak dicatat..." />
+                <input type="tel" maxlength="16" id="regSecondIdInput" class="form-input mono-input" placeholder="Kosongkan jika tidak dicatat..." oninput="captureDraftRegForm('${digits}')" />
               </div>
             `}
 
@@ -2245,13 +3512,28 @@
             </button>
           </div>
         `;
+
+        const nameInput = document.getElementById('regNameInput');
+        const secondInput = document.getElementById('regSecondIdInput');
+        if (nameInput && savedName) nameInput.value = savedName;
+        if (secondInput && savedSecond) secondInput.value = savedSecond;
+
+        if (activeFieldId) {
+          const targetEl = document.getElementById(activeFieldId);
+          if (targetEl) {
+            targetEl.focus();
+            if (typeof selStart === 'number' && typeof selEnd === 'number') {
+              try { targetEl.setSelectionRange(selStart, selEnd); } catch (e) {}
+            }
+          }
+        }
         return;
       }
 
       // CASE 3: Idle prompt
       container.innerHTML = `
         <div style="background:#F8FAFC; border:1px dashed #CBD5E1; border-radius:9px; padding:12px; text-align:center; color:#64748B; font-size:12.5px;">
-          Ketik atau scan <strong>16 digit NIK / No. KK</strong> untuk mengecek sisa kuota harian &amp; mingguan warga.
+          Ketik atau scan <strong>16 digit NIK / No. KK</strong> (atau ketik nama warga) untuk mengecek sisa kuota.
         </div>
       `;
     }
@@ -2276,13 +3558,13 @@
       const nik = (regMode === 'nik') ? primary16Digits : secondDigits;
       const kk = (regMode === 'kk') ? primary16Digits : secondDigits;
 
-      // Check if secondDigits already exists in database to merge smoothly
       if (secondDigits.length === 16) {
         const existingOther = findCitizenBy16Digit(secondDigits);
         if (existingOther) {
           if (nik && !existingOther.nik) existingOther.nik = nik;
           if (kk && !existingOther.kk) existingOther.kk = kk;
-          saveCitizens();
+          saveCitizensLocal();
+          queueCloudSync('put', `citizens/${existingOther.id}`, existingOther);
           selectCitizen(existingOther.id);
           showToast(`Data digabungkan dengan profil ${existingOther.name}.`);
           return;
@@ -2299,7 +3581,9 @@
       };
 
       citizens.unshift(newCitizen);
-      saveCitizens();
+      saveCitizensLocal();
+      queueCloudSync('put', `citizens/${newCitizen.id}`, newCitizen);
+      clearDraftRegForm();
       selectCitizen(newCitizen.id);
       showToast(`Warga "${name}" terdaftar! Silakan pilih komoditas.`);
     }
@@ -2315,33 +3599,40 @@
         return;
       }
 
-      // Check if another record already holds this 16-digit ID -> Auto-Merge!
       const duplicate = citizens.find(x => x.id !== c.id && (x.nik === val || x.kk === val));
       if (duplicate) {
         if (fieldType === 'kk') {
-          // Merge c into duplicate (which has KK) or copy KK to c
           if (!duplicate.nik && c.nik) duplicate.nik = c.nik;
           if (c.nik && duplicate.nik !== c.nik) {
             duplicate.extraNiks = Array.from(new Set([...(duplicate.extraNiks || []), c.nik]));
           }
-          // Re-link any transactions of c to include this KK
           transactions.forEach(t => {
-            if (t.citizenId === c.id && !t.kk) t.kk = val;
+            if (t.citizenId === c.id && !t.kk) {
+              t.kk = val;
+              queueCloudSync('put', `transactions/${t.id}`, t);
+            }
           });
           citizens = citizens.filter(x => x.id !== c.id);
-          saveCitizens();
-          saveTransactions();
+          saveCitizensLocal();
+          saveTransactionsLocal();
+          queueCloudSync('put', `citizens/${duplicate.id}`, duplicate);
+          queueCloudSync('del', `citizens/${c.id}`);
           selectCitizen(duplicate.id);
           showToast(`Data digabungkan otomatis ke keluarga ${duplicate.name}!`);
           return;
         } else {
           if (!duplicate.kk && c.kk) duplicate.kk = c.kk;
           transactions.forEach(t => {
-            if (t.citizenId === c.id && !t.nik) t.nik = val;
+            if (t.citizenId === c.id && !t.nik) {
+              t.nik = val;
+              queueCloudSync('put', `transactions/${t.id}`, t);
+            }
           });
           citizens = citizens.filter(x => x.id !== c.id);
-          saveCitizens();
-          saveTransactions();
+          saveCitizensLocal();
+          saveTransactionsLocal();
+          queueCloudSync('put', `citizens/${duplicate.id}`, duplicate);
+          queueCloudSync('del', `citizens/${c.id}`);
           selectCitizen(duplicate.id);
           showToast(`Data NIK digabungkan otomatis dengan ${duplicate.name}!`);
           return;
@@ -2351,25 +3642,32 @@
       if (fieldType === 'kk') {
         c.kk = val;
         transactions.forEach(t => {
-          if (t.citizenId === c.id && !t.kk) t.kk = val;
+          if (t.citizenId === c.id && !t.kk) {
+            t.kk = val;
+            queueCloudSync('put', `transactions/${t.id}`, t);
+          }
         });
       } else {
         c.nik = val;
         transactions.forEach(t => {
-          if (t.citizenId === c.id && !t.nik) t.nik = val;
+          if (t.citizenId === c.id && !t.nik) {
+            t.nik = val;
+            queueCloudSync('put', `transactions/${t.id}`, t);
+          }
         });
       }
 
-      saveCitizens();
-      saveTransactions();
+      saveCitizensLocal();
+      saveTransactionsLocal();
+      queueCloudSync('put', `citizens/${c.id}`, c);
       renderCitizenPanel();
       renderCommodities();
-      updateStickyMobileBanner();
+      updateSessionBars();
       showToast(`No. ${fieldType.toUpperCase()} berhasil dilengkapi!`);
     }
 
     /* =====================================================================
-       TRANSACTION DATE & COMMODITY CARDS
+       TRANSACTION DATE & COMMODITY CARDS (FIX #3: DISTINCT PARTIAL-USAGE COLORS)
     ===================================================================== */
     function setTxDatePreset(preset) {
       selectedDateStr = (preset === 'yesterday') ? getYesterdayStr() : getTodayStr();
@@ -2438,46 +3736,55 @@
       const hasKk = c.kk && c.kk.length === 16;
 
       // 1. MINYAK GORENG CARD
-      let oilCardClass = 'item-card';
+      let oilCardClass = 'item-card' + (lastRecordedItemKey === 'minyak' ? ' just-recorded' : '');
       let oilBtnHtml = '';
       if (!hasNik) {
         oilCardClass += ' locked';
         oilBtnHtml = `<button type="button" class="btn-tx btn-tx-locked" onclick="focusInlineComplete('nik')">🔒 Butuh No. NIK (16 Digit)</button>`;
       } else if (q.oilRem <= 0) {
         oilCardClass += ' exhausted';
-        oilBtnHtml = `<button type="button" class="btn-tx btn-tx-disabled" disabled>⛔ Kuota Hari Ini Habis (1/1 L)</button>`;
+        oilBtnHtml = `<button type="button" class="btn-tx btn-tx-disabled" disabled>✅ Sudah Diambil (1/1 Liter)</button>`;
       } else {
         oilCardClass += ' eligible';
         oilBtnHtml = `<button type="button" class="btn-tx btn-tx-ready" onclick="recordTransaction('minyak', 1)">+ Catat 1 Liter Minyak</button>`;
       }
 
       // 2. GAS LPG 3KG CARD
-      let gasCardClass = 'item-card';
+      let gasCardClass = 'item-card' + (lastRecordedItemKey === 'gas' ? ' just-recorded' : '');
       let gasBtnHtml = '';
       if (!hasKk) {
         gasCardClass += ' locked';
         gasBtnHtml = `<button type="button" class="btn-tx btn-tx-locked" onclick="focusInlineComplete('kk')">🔒 Butuh No. KK (16 Digit)</button>`;
       } else if (q.gasRem <= 0) {
         gasCardClass += ' exhausted';
-        gasBtnHtml = `<button type="button" class="btn-tx btn-tx-disabled" disabled>⛔ Kuota Minggu Ini Habis (1/1)</button>`;
+        gasBtnHtml = `<button type="button" class="btn-tx btn-tx-disabled" disabled>✅ Sudah Diambil (1/1 Tabung)</button>`;
       } else {
         gasCardClass += ' eligible';
         gasBtnHtml = `<button type="button" class="btn-tx btn-tx-ready" onclick="recordTransaction('gas', 1)">+ Catat 1 Tabung Gas 3kg</button>`;
       }
 
-      // 3. BERAS SPHP CARD
-      let riceCardClass = 'item-card';
+      // 3. BERAS SPHP CARD (Distinct Royal-Blue partial state when q.riceUsed > 0 && q.riceRem > 0)
+      let riceCardClass = 'item-card' + (lastRecordedItemKey === 'beras' ? ' just-recorded' : '');
       let riceStepperHtml = '';
       let riceBtnHtml = '';
+      let ricePartialBadgeHtml = '';
+      const isRicePartial = hasKk && q.riceUsed > 0 && q.riceRem > 0;
+
       if (!hasKk) {
         riceCardClass += ' locked';
         riceBtnHtml = `<button type="button" class="btn-tx btn-tx-locked" onclick="focusInlineComplete('kk')">🔒 Butuh No. KK (16 Digit)</button>`;
       } else if (q.riceRem <= 0) {
         riceCardClass += ' exhausted';
-        riceBtnHtml = `<button type="button" class="btn-tx btn-tx-disabled" disabled>⛔ Kuota Minggu Ini Habis (5/5)</button>`;
+        riceBtnHtml = `<button type="button" class="btn-tx btn-tx-disabled" disabled>✅ Sudah Diambil (5/5 Pack)</button>`;
       } else {
-        riceCardClass += ' eligible';
         if (sphpQty > q.riceRem) sphpQty = q.riceRem;
+        if (isRicePartial) {
+          riceCardClass += ' partial-used';
+          ricePartialBadgeHtml = `<div class="partial-status-pill">✓ Sudah Diambil ${q.riceUsed} Pack (Sisa ${q.riceRem})</div>`;
+        } else {
+          riceCardClass += ' eligible';
+        }
+
         riceStepperHtml = `
           <div class="sphp-stepper">
             <button type="button" class="step-btn" onclick="changeSphpQty(-1)">−</button>
@@ -2485,7 +3792,14 @@
             <button type="button" class="step-btn" onclick="changeSphpQty(1)">+</button>
           </div>
         `;
-        riceBtnHtml = `<button type="button" class="btn-tx btn-tx-ready" onclick="recordTransaction('beras', ${sphpQty})">+ Catat ${sphpQty} Pack SPHP</button>`;
+
+        if (lastRecordedItemKey === 'beras') {
+          riceBtnHtml = `<button type="button" class="btn-tx btn-tx-partial btn-tx-flash" onclick="recordTransaction('beras', ${sphpQty})">✅ TERSIMPAN! + Tambah ${sphpQty} Pack Lagi</button>`;
+        } else if (isRicePartial) {
+          riceBtnHtml = `<button type="button" class="btn-tx btn-tx-partial" onclick="recordTransaction('beras', ${sphpQty})">+ Tambah ${sphpQty} Pack Lagi (Sisa ${q.riceRem})</button>`;
+        } else {
+          riceBtnHtml = `<button type="button" class="btn-tx btn-tx-ready" onclick="recordTransaction('beras', ${sphpQty})">+ Catat ${sphpQty} Pack SPHP</button>`;
+        }
       }
 
       container.innerHTML = `
@@ -2544,17 +3858,18 @@
               <span class="item-icon">🌾</span>
               <span class="item-rule-badge">5 Pack / Minggu / KK</span>
             </div>
+            ${ricePartialBadgeHtml}
             <h4 class="item-name">Beras SPHP</h4>
             <div class="item-sub">Kemasan 5 kg Bulog</div>
             <div class="quota-meter">
               <div class="quota-numbers">
                 <span style="font-size:11.5px; font-weight:700; color:#475569;">Sisa Kuota:</span>
-                <span class="quota-rem ${!hasKk ? 'muted' : (q.riceRem === 0 ? 'zero' : '')}">
+                <span class="quota-rem ${!hasKk ? 'muted' : (q.riceRem === 0 ? 'zero' : (isRicePartial ? 'partial' : ''))}">
                   ${hasKk ? `${q.riceRem} / 5 Pack` : 'Terkunci'}
                 </span>
               </div>
               <div class="progress-track">
-                <div class="progress-fill ${q.riceRem === 0 ? 'full' : ''}" style="width:${hasKk ? (q.riceUsed / 5) * 100 : 0}%"></div>
+                <div class="progress-fill ${q.riceRem === 0 ? 'full' : (isRicePartial ? 'partial' : '')}" style="width:${hasKk ? (q.riceUsed / 5) * 100 : 0}%"></div>
               </div>
             </div>
           </div>
@@ -2596,6 +3911,12 @@
       }
     }
 
+    function buildItemLabel(itemKey, qty) {
+      if (itemKey === 'minyak') return `Minyak Goreng (${qty}L)`;
+      if (itemKey === 'gas') return `Gas LPG 3kg (${qty} Tbg)`;
+      return `Beras SPHP (${qty} Pack)`;
+    }
+
     function recordTransaction(itemKey, qty) {
       const c = citizens.find(x => x.id === selectedCitizenId);
       if (!c) return;
@@ -2612,12 +3933,7 @@
         if (q.riceRem < qty) return showToast(`Sisa kuota Beras SPHP hanya ${q.riceRem} pack.`, 'error');
       }
 
-      const itemNames = {
-        minyak: 'Minyak Goreng (1L)',
-        gas: 'Gas LPG 3kg (1 Tbg)',
-        beras: `Beras SPHP (${qty} Pack)`
-      };
-
+      const label = buildItemLabel(itemKey, qty);
       const tx = {
         id: uid(),
         date: selectedDateStr,
@@ -2627,23 +3943,278 @@
         nik: c.nik || '',
         kk: c.kk || '',
         item: itemKey,
-        itemLabel: itemNames[itemKey],
+        itemLabel: label,
         qty: Number(qty)
       };
 
       transactions.unshift(tx);
-      saveTransactions();
+      saveTransactionsLocal();
+      queueCloudSync('put', `transactions/${tx.id}`, tx);
+
       sphpQty = 1;
+      lastRecordedItemKey = itemKey;
       refreshAllUI();
-      showToast(`✅ Tercatat: ${itemNames[itemKey]} — ${c.name}`);
+      triggerHaptic(35);
+      showToast(`✅ Tercatat: ${label} — ${c.name}`);
+
+      setTimeout(() => {
+        if (lastRecordedItemKey === itemKey) {
+          lastRecordedItemKey = null;
+          renderCommodities();
+        }
+      }, 1600);
+    }
+
+    /* =====================================================================
+       EDIT / CORRECT TRANSACTION QUANTITY & DATE (FIX #5)
+    ===================================================================== */
+    function openEditTxModal(txId) {
+      const tx = transactions.find(t => t.id === txId);
+      if (!tx) return;
+      editingTxObj = tx;
+      editTxQtyVal = Number(tx.qty || 1);
+
+      document.getElementById('editTxId').value = tx.id;
+      document.getElementById('editTxCitizenName').textContent = tx.name;
+      document.getElementById('editTxItemInfo').textContent =
+        `Komoditas: ${tx.itemLabel} • NIK: ${tx.nik || '-'} • KK: ${tx.kk || '-'}`;
+      document.getElementById('editTxDateInput').value = tx.date;
+
+      recalcEditTxBounds();
+      document.getElementById('editTxModal').classList.add('open');
+    }
+
+    function closeEditTxModal() {
+      document.getElementById('editTxModal').classList.remove('open');
+      editingTxObj = null;
+    }
+
+    function recalcEditTxBounds() {
+      if (!editingTxObj) return;
+      const newDate = document.getElementById('editTxDateInput').value || editingTxObj.date;
+      const c = citizens.find(x => x.id === editingTxObj.citizenId) || {
+        nik: editingTxObj.nik,
+        kk: editingTxObj.kk
+      };
+
+      // Calculate quota excluding the transaction currently being edited
+      const q = getQuotaStatusForCitizen(c, newDate, editingTxObj.id);
+      if (editingTxObj.item === 'minyak') {
+        editTxMaxAllowed = Math.max(1, q.oilRem);
+      } else if (editingTxObj.item === 'gas') {
+        editTxMaxAllowed = Math.max(1, q.gasRem);
+      } else {
+        editTxMaxAllowed = Math.max(1, q.riceRem);
+      }
+
+      if (editTxQtyVal > editTxMaxAllowed) editTxQtyVal = editTxMaxAllowed;
+      if (editTxQtyVal < 1) editTxQtyVal = 1;
+
+      document.getElementById('editTxMaxHint').textContent = `Maks Sisa Kuota: ${editTxMaxAllowed}`;
+      document.getElementById('editTxQtyDisplay').textContent =
+        editingTxObj.item === 'beras'
+          ? `${editTxQtyVal} Pack (${editTxQtyVal * 5} kg)`
+          : (editingTxObj.item === 'minyak' ? `${editTxQtyVal} Liter` : `${editTxQtyVal} Tabung`);
+    }
+
+    function changeEditTxQty(delta) {
+      if (!editingTxObj) return;
+      editTxQtyVal = Math.min(editTxMaxAllowed, Math.max(1, editTxQtyVal + delta));
+      recalcEditTxBounds();
+    }
+
+    function saveEditedTransaction() {
+      if (!editingTxObj) return;
+      const newDate = document.getElementById('editTxDateInput').value || editingTxObj.date;
+      const c = citizens.find(x => x.id === editingTxObj.citizenId) || {
+        nik: editingTxObj.nik,
+        kk: editingTxObj.kk
+      };
+      const q = getQuotaStatusForCitizen(c, newDate, editingTxObj.id);
+
+      const rem = editingTxObj.item === 'minyak' ? q.oilRem : (editingTxObj.item === 'gas' ? q.gasRem : q.riceRem);
+      if (editTxQtyVal > rem) {
+        showToast(`Jumlah melebihi sisa kuota (${rem}).`, 'error');
+        return;
+      }
+
+      editingTxObj.qty = Number(editTxQtyVal);
+      editingTxObj.date = newDate;
+      editingTxObj.itemLabel = buildItemLabel(editingTxObj.item, editingTxObj.qty);
+
+      saveTransactionsLocal();
+      queueCloudSync('put', `transactions/${editingTxObj.id}`, editingTxObj);
+      closeEditTxModal();
+      refreshAllUI();
+      showToast(`✅ Koreksi disimpan: ${editingTxObj.itemLabel}`);
+    }
+
+    let pendingConfirmCallback = null;
+
+    function openConfirmModal({ title, message, showExtraCheckbox = false, extraLabel = '', extraChecked = true, onConfirm }) {
+      document.getElementById('confirmModalTitle').textContent = title || '⚠️ Konfirmasi Hapus';
+      document.getElementById('confirmModalMessage').innerHTML = message || 'Yakin ingin menghapus data ini?';
+      const extraWrap = document.getElementById('confirmExtraOptionWrap');
+      const extraCb = document.getElementById('confirmExtraCheckbox');
+      if (showExtraCheckbox) {
+        extraWrap.style.display = 'flex';
+        document.getElementById('confirmExtraLabel').textContent = extraLabel;
+        extraCb.checked = extraChecked;
+      } else {
+        extraWrap.style.display = 'none';
+      }
+      pendingConfirmCallback = onConfirm;
+      document.getElementById('confirmActionModal').classList.add('open');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirmActionModal').classList.remove('open');
+      pendingConfirmCallback = null;
+    }
+
+    function executeConfirmedAction() {
+      const cb = pendingConfirmCallback;
+      const extraChecked = document.getElementById('confirmExtraCheckbox').checked;
+      closeConfirmModal();
+      if (typeof cb === 'function') {
+        cb(extraChecked);
+      }
+    }
+
+    function deleteFromEditModal() {
+      if (!editingTxObj) return;
+      const id = editingTxObj.id;
+      closeEditTxModal();
+      deleteTransaction(id);
     }
 
     function deleteTransaction(txId) {
-      if (!confirm('Batalkan / hapus transaksi ini? Kuota warga akan dikembalikan.')) return;
-      transactions = transactions.filter(t => t.id !== txId);
-      saveTransactions();
+      const tx = transactions.find(t => t.id === txId);
+      if (!tx) return;
+      openConfirmModal({
+        title: '🗑️ Hapus Riwayat Transaksi',
+        message: `Hapus catatan pengambilan <strong>${escapeHtml(tx.itemLabel)}</strong> atas nama <strong>${escapeHtml(tx.name)}</strong> (${formatDateIndo(tx.date)})?<br><span style="font-size:12px; color:#475569;">Kuota warga akan otomatis dikembalikan.</span>`,
+        onConfirm: () => {
+          transactions = transactions.filter(t => t.id !== txId);
+          saveTransactionsLocal();
+          queueCloudSync('del', `transactions/${txId}`);
+          refreshAllUI();
+          showToast('🗑️ Transaksi dihapus & kuota dikembalikan.');
+        }
+      });
+    }
+
+    function openEditCitizenModal(citizenId) {
+      const c = citizens.find(x => x.id === citizenId);
+      if (!c) return;
+      document.getElementById('editCitizenId').value = c.id;
+      document.getElementById('editCitizenName').value = c.name || '';
+      document.getElementById('editCitizenNik').value = c.nik || '';
+      document.getElementById('editCitizenKk').value = c.kk || '';
+      updateEditCitizenDigitCounters();
+      document.getElementById('editCitizenModal').classList.add('open');
+    }
+
+    function closeEditCitizenModal() {
+      document.getElementById('editCitizenModal').classList.remove('open');
+    }
+
+    function updateEditCitizenDigitCounters() {
+      const nikEl = document.getElementById('editCitizenNik');
+      const kkEl = document.getElementById('editCitizenKk');
+      nikEl.value = cleanDigits(nikEl.value);
+      kkEl.value = cleanDigits(kkEl.value);
+      document.getElementById('editCitizenNikLen').textContent = `${nikEl.value.length}/16`;
+      document.getElementById('editCitizenKkLen').textContent = `${kkEl.value.length}/16`;
+    }
+
+    function saveEditedCitizen() {
+      const id = document.getElementById('editCitizenId').value;
+      const c = citizens.find(x => x.id === id);
+      if (!c) return;
+
+      const newName = document.getElementById('editCitizenName').value.trim();
+      const newNik = cleanDigits(document.getElementById('editCitizenNik').value);
+      const newKk = cleanDigits(document.getElementById('editCitizenKk').value);
+
+      if (!newName) {
+        showToast('Nama warga wajib diisi.', 'error');
+        return;
+      }
+      if (newNik.length > 0 && newNik.length !== 16) {
+        showToast('No. NIK harus tepat 16 digit atau dikosongkan.', 'error');
+        return;
+      }
+      if (newKk.length > 0 && newKk.length !== 16) {
+        showToast('No. KK harus tepat 16 digit atau dikosongkan.', 'error');
+        return;
+      }
+      if (!newNik && !newKk) {
+        showToast('Minimal salah satu (NIK atau No. KK) harus diisi.', 'error');
+        return;
+      }
+
+      const oldNik = c.nik;
+      const oldKk = c.kk;
+      c.name = newName;
+      c.nik = newNik;
+      c.kk = newKk;
+
+      let txChanged = false;
+      transactions.forEach(t => {
+        if (t.citizenId === c.id || (oldNik && t.nik === oldNik) || (oldKk && t.kk === oldKk)) {
+          t.citizenId = c.id;
+          t.name = newName;
+          t.nik = newNik;
+          t.kk = newKk;
+          txChanged = true;
+          queueCloudSync('put', `transactions/${t.id}`, t);
+        }
+      });
+
+      saveCitizensLocal();
+      if (txChanged) saveTransactionsLocal();
+      queueCloudSync('put', `citizens/${c.id}`, c);
+      closeEditCitizenModal();
       refreshAllUI();
-      showToast('Transaksi dibatalkan & kuota dikembalikan.');
+      showToast(`✅ Data warga "${newName}" berhasil diperbarui!`);
+    }
+
+    function deleteCitizen(citizenId) {
+      const c = citizens.find(x => x.id === citizenId);
+      if (!c) return;
+      const relatedTxs = transactions.filter(t =>
+        t.citizenId === c.id ||
+        (c.nik && c.nik.length === 16 && t.nik === c.nik) ||
+        (c.kk && c.kk.length === 16 && t.kk === c.kk)
+      );
+
+      openConfirmModal({
+        title: '🗑️ Hapus Data Warga Terdaftar',
+        message: `Hapus warga <strong>${escapeHtml(c.name)}</strong><br><span style="font-family:monospace; font-size:12px; color:#475569;">NIK: ${c.nik || '-'} | KK: ${c.kk || '-'}</span>`,
+        showExtraCheckbox: relatedTxs.length > 0,
+        extraLabel: `Sekaligus hapus ${relatedTxs.length} riwayat transaksi milik warga ini`,
+        extraChecked: true,
+        onConfirm: (alsoDeleteTxs) => {
+          citizens = citizens.filter(x => x.id !== citizenId);
+          saveCitizensLocal();
+          queueCloudSync('del', `citizens/${citizenId}`);
+
+          if (alsoDeleteTxs && relatedTxs.length > 0) {
+            const delTxIds = new Set(relatedTxs.map(t => t.id));
+            transactions = transactions.filter(t => !delTxIds.has(t.id));
+            saveTransactionsLocal();
+            delTxIds.forEach(tid => queueCloudSync('del', `transactions/${tid}`));
+          }
+
+          if (selectedCitizenId === citizenId) {
+            finishCitizenSession();
+          } else {
+            refreshAllUI();
+          }
+          showToast(`🗑️ Data warga "${c.name}" berhasil dihapus.`);
+        }
+      });
     }
 
     function renderRecentTransactions() {
@@ -2656,7 +4227,7 @@
       }
 
       container.innerHTML = `
-        <div class="table-wrap">
+        <div class="table-wrap table-scroll-compact">
           <table class="excel-table">
             <thead>
               <tr>
@@ -2668,7 +4239,7 @@
               </tr>
             </thead>
             <tbody>
-              ${list.slice(0, 15).map(t => `
+              ${list.slice(0, 20).map(t => `
                 <tr>
                   <td style="white-space:nowrap; font-family:monospace;">${t.time || '-'}</td>
                   <td><strong>${escapeHtml(t.name)}</strong></td>
@@ -2676,8 +4247,9 @@
                   <td style="font-family:monospace; font-size:11px;">
                     ${t.nik ? `NIK:${t.nik}` : ''}${t.nik && t.kk ? '<br>' : ''}${t.kk ? `KK:${t.kk}` : ''}
                   </td>
-                  <td>
-                    <button type="button" class="btn btn-danger-outline btn-sm" onclick="deleteTransaction('${t.id}')">Batal</button>
+                  <td style="white-space:nowrap;">
+                    <button type="button" class="btn btn-edit-outline btn-sm" onclick="openEditTxModal('${t.id}')">✏️ Edit</button>
+                    <button type="button" class="btn btn-danger-outline btn-sm" onclick="deleteTransaction('${t.id}')">Hapus</button>
                   </td>
                 </tr>
               `).join('')}
@@ -2692,11 +4264,14 @@
     ===================================================================== */
     function setDbFilter(flt) {
       dbFilter = flt;
-      ['fltAll', 'fltNoKk', 'fltNoNik', 'fltComplete'].forEach(id => {
-        document.getElementById(id).classList.remove('active');
+      ['fltAll', 'fltGenericName', 'fltNoKk', 'fltNoNik', 'fltComplete'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
       });
-      const map = { all: 'fltAll', missing_kk: 'fltNoKk', missing_nik: 'fltNoNik', complete: 'fltComplete' };
-      document.getElementById(map[flt]).classList.add('active');
+      const map = { all: 'fltAll', generic_name: 'fltGenericName', missing_kk: 'fltNoKk', missing_nik: 'fltNoNik', complete: 'fltComplete' };
+      if (map[flt] && document.getElementById(map[flt])) {
+        document.getElementById(map[flt]).classList.add('active');
+      }
       renderDatabaseTab();
     }
 
@@ -2746,10 +4321,12 @@
           createdAt: new Date().toISOString()
         };
         citizens.unshift(c);
-        saveCitizens();
+        saveCitizensLocal();
+        queueCloudSync('put', `citizens/${c.id}`, c);
       } else if (!c.kk) {
         c.kk = kk;
-        saveCitizens();
+        saveCitizensLocal();
+        queueCloudSync('put', `citizens/${c.id}`, c);
       }
 
       const q = getQuotaStatusForCitizen(c, dateVal);
@@ -2758,7 +4335,7 @@
         return;
       }
 
-      transactions.unshift({
+      const tx = {
         id: uid(),
         date: dateVal,
         time: 'Susulan',
@@ -2769,9 +4346,12 @@
         item: 'beras',
         itemLabel: `Beras SPHP (${qty} Pack)`,
         qty
-      });
+      };
 
-      saveTransactions();
+      transactions.unshift(tx);
+      saveTransactionsLocal();
+      queueCloudSync('put', `transactions/${tx.id}`, tx);
+
       document.getElementById('batchSphpKk').value = '';
       document.getElementById('batchSphpName').value = '';
       document.getElementById('batchKkLen').textContent = '0/16';
@@ -2791,10 +4371,27 @@
       document.getElementById('statRiceWeek').textContent =
         transactions.filter(t => t.item === 'beras' && getWeekKey(t.date) === curWeek).reduce((s, t) => s + Number(t.qty || 0), 0) + ' Pack';
 
+      const genericCount = citizens.filter(c => isGenericWargaName(c.name)).length;
+      const alertBox = document.getElementById('genericWargaAlertBox');
+      const fltGenBtn = document.getElementById('fltGenericName');
+      if (alertBox && fltGenBtn) {
+        if (genericCount > 0) {
+          alertBox.style.display = 'block';
+          document.getElementById('genericWargaCountText').textContent = genericCount;
+          fltGenBtn.style.display = 'inline-block';
+          document.getElementById('fltGenericCount').textContent = genericCount;
+        } else {
+          alertBox.style.display = 'none';
+          fltGenBtn.style.display = 'none';
+          if (dbFilter === 'generic_name') dbFilter = 'all';
+        }
+      }
+
       const q = (document.getElementById('dbSearchInput').value || '').trim().toLowerCase();
       let filtered = citizens.filter(c => {
         const hasNik = c.nik && c.nik.length === 16;
         const hasKk = c.kk && c.kk.length === 16;
+        if (dbFilter === 'generic_name' && !isGenericWargaName(c.name)) return false;
         if (dbFilter === 'missing_kk' && hasKk) return false;
         if (dbFilter === 'missing_nik' && hasNik) return false;
         if (dbFilter === 'complete' && (!hasNik || !hasKk)) return false;
@@ -2807,12 +4404,15 @@
         return true;
       });
 
+      const cBadge = document.getElementById('citizenCountBadge');
+      if (cBadge) cBadge.textContent = `${filtered.length} warga`;
+
       const cContainer = document.getElementById('citizenTableContainer');
       if (filtered.length === 0) {
         cContainer.innerHTML = `<div style="text-align:center; padding:14px; color:#64748B;">Tidak ada data warga yang cocok.</div>`;
       } else {
         cContainer.innerHTML = `
-          <div class="table-wrap">
+          <div class="table-wrap table-scroll-box">
             <table class="excel-table">
               <thead>
                 <tr>
@@ -2839,6 +4439,8 @@
                       <td style="white-space:nowrap;">
                         <button type="button" class="btn btn-green btn-sm" onclick="openCitizenInPos('${c.id}')">Kasir</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="openQrCardModal('${c.id}')">QR</button>
+                        <button type="button" class="btn btn-edit-outline btn-sm" onclick="openEditCitizenModal('${c.id}')">✏️ Edit</button>
+                        <button type="button" class="btn btn-danger-outline btn-sm" onclick="deleteCitizen('${c.id}')">🗑️ Hapus</button>
                       </td>
                     </tr>
                   `;
@@ -2849,13 +4451,26 @@
         `;
       }
 
-      // Full Transaction History
+      const txQuery = (document.getElementById('txSearchInput')?.value || '').trim().toLowerCase();
+      const filteredTxs = txQuery
+        ? transactions.filter(t =>
+            (t.name && t.name.toLowerCase().includes(txQuery)) ||
+            (t.itemLabel && t.itemLabel.toLowerCase().includes(txQuery)) ||
+            (t.date && t.date.includes(txQuery)) ||
+            (t.nik && t.nik.includes(txQuery)) ||
+            (t.kk && t.kk.includes(txQuery))
+          )
+        : transactions;
+
+      const tBadge = document.getElementById('txCountBadge');
+      if (tBadge) tBadge.textContent = `${filteredTxs.length} catatan`;
+
       const tContainer = document.getElementById('fullTxTableContainer');
-      if (transactions.length === 0) {
-        tContainer.innerHTML = `<div style="text-align:center; padding:14px; color:#64748B;">Belum ada riwayat transaksi.</div>`;
+      if (filteredTxs.length === 0) {
+        tContainer.innerHTML = `<div style="text-align:center; padding:14px; color:#64748B;">Tidak ada riwayat transaksi yang cocok.</div>`;
       } else {
         tContainer.innerHTML = `
-          <div class="table-wrap">
+          <div class="table-wrap table-scroll-box">
             <table class="excel-table">
               <thead>
                 <tr>
@@ -2868,7 +4483,7 @@
                 </tr>
               </thead>
               <tbody>
-                ${transactions.slice(0, 100).map(t => `
+                ${filteredTxs.slice(0, 500).map(t => `
                   <tr>
                     <td style="white-space:nowrap;">${formatDateIndo(t.date)} <span style="color:#64748B;">${t.time || ''}</span></td>
                     <td><strong>${escapeHtml(t.name)}</strong></td>
@@ -2877,7 +4492,8 @@
                     <td style="font-family:monospace; font-size:11px;">
                       ${t.nik ? `NIK:${t.nik}` : ''}${t.nik && t.kk ? '<br>' : ''}${t.kk ? `KK:${t.kk}` : ''}
                     </td>
-                    <td>
+                    <td style="white-space:nowrap;">
+                      <button type="button" class="btn btn-edit-outline btn-sm" onclick="openEditTxModal('${t.id}')">✏️ Edit</button>
                       <button type="button" class="btn btn-danger-outline btn-sm" onclick="deleteTransaction('${t.id}')">Hapus</button>
                     </td>
                   </tr>
@@ -2951,33 +4567,290 @@
       showToast('💾 File cadangan JSON tersimpan!');
     }
 
+    function toArrayCollection(val) {
+      if (Array.isArray(val)) return val;
+      if (val && typeof val === 'object') return Object.values(val);
+      return null;
+    }
+
+    function normalizeDateString(raw) {
+      const s = String(raw || '').trim();
+      if (!s) return getTodayStr();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (dmy) {
+        return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`;
+      }
+      return s.slice(0, 10);
+    }
+
+    function normalizeCommodityKey(raw) {
+      const s = String(raw || '').toLowerCase();
+      if (s.includes('minyak') || s.includes('oil')) return 'minyak';
+      if (s.includes('gas') || s.includes('lpg') || s.includes('elpiji')) return 'gas';
+      return 'beras';
+    }
+
     function restoreJSON(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (e) => {
+        const rawText = String(e.target.result || '').replace(/^\uFEFF/, '').trim();
         try {
-          const data = JSON.parse(e.target.result);
-          if (Array.isArray(data.citizens) && Array.isArray(data.transactions)) {
-            citizens = data.citizens;
-            transactions = data.transactions;
-            saveCitizens();
-            saveTransactions();
-            refreshAllUI();
-            showToast(`✅ Berhasil memulihkan ${citizens.length} warga & ${transactions.length} transaksi.`);
-          } else {
-            showToast('Format file backup tidak valid.', 'error');
+          if (file.name.toLowerCase().endsWith('.csv') || (!rawText.startsWith('{') && !rawText.startsWith('['))) {
+            restoreFromCsvBackup(rawText);
+            return;
           }
+
+          let parsed = JSON.parse(rawText);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            if (parsed.data && typeof parsed.data === 'object' && !Array.isArray(parsed.data)) {
+              parsed = parsed.data;
+            } else if (parsed.payload && typeof parsed.payload === 'object' && !Array.isArray(parsed.payload)) {
+              parsed = parsed.payload;
+            }
+          }
+
+          let rawCitizens = null;
+          let rawTxs = null;
+
+          if (Array.isArray(parsed)) {
+            const looksLikeTx = parsed.some(x => x && (x.item || x.komoditas || x.qty !== undefined || x.jumlah !== undefined));
+            if (looksLikeTx) {
+              rawTxs = parsed;
+              rawCitizens = [];
+            } else {
+              rawCitizens = parsed;
+              rawTxs = [];
+            }
+          } else if (parsed && typeof parsed === 'object') {
+            rawCitizens = toArrayCollection(
+              parsed.citizens ?? parsed.warga ?? parsed.dataWarga ?? parsed.data_warga ??
+              parsed.users ?? parsed.kdkmp_citizens_v3 ?? parsed.kdkmp_citizens_v2 ??
+              parsed.kdkmp_citizens_v1 ?? parsed.sembako_citizens
+            );
+            rawTxs = toArrayCollection(
+              parsed.transactions ?? parsed.transaksi ?? parsed.riwayat ?? parsed.dataTransaksi ??
+              parsed.data_transaksi ?? parsed.history ?? parsed.kdkmp_tx_v3 ?? parsed.kdkmp_tx_v2 ??
+              parsed.kdkmp_tx_v1 ?? parsed.sembako_transactions
+            );
+          }
+
+          if (!rawCitizens && !rawTxs) {
+            showToast('Format file backup tidak dikenali. Pastikan memilih file .json atau .csv hasil export aplikasi.', 'error');
+            return;
+          }
+
+          const normCitizens = (rawCitizens || []).filter(Boolean).map(c => ({
+            id: c.id || uid(),
+            name: extractPersonName(c, 'Warga'),
+            nik: extractIdField(c, 'nik') || cleanDigits(c.nik || ''),
+            kk: extractIdField(c, 'kk') || cleanDigits(c.kk || ''),
+            extraNiks: Array.isArray(c.extraNiks) ? c.extraNiks : [],
+            createdAt: c.createdAt || c.created_at || new Date().toISOString()
+          }));
+
+          const normTxs = (rawTxs || []).filter(Boolean).map(t => {
+            const itemKey = normalizeCommodityKey(t.item || t.komoditas || t.Komoditas || t.itemLabel || t.jenis);
+            const qty = Math.max(1, Number(t.qty || t.jumlah || t.Jumlah || 1));
+            const nik = extractIdField(t, 'nik') || cleanDigits(t.nik || '');
+            const kk = extractIdField(t, 'kk') || cleanDigits(t.kk || '');
+            const name = extractPersonName(t, 'Warga');
+
+            let matched = normCitizens.find(c =>
+              (t.citizenId && c.id === t.citizenId) ||
+              (nik.length === 16 && c.nik === nik) ||
+              (kk.length === 16 && c.kk === kk)
+            );
+            if (!matched && (nik.length === 16 || kk.length === 16)) {
+              matched = {
+                id: t.citizenId || uid(),
+                name,
+                nik: nik.length === 16 ? nik : '',
+                kk: kk.length === 16 ? kk : '',
+                extraNiks: [],
+                createdAt: new Date().toISOString()
+              };
+              normCitizens.push(matched);
+            } else if (matched) {
+              matched.name = pickBetterName(matched.name, name);
+            }
+
+            const finalName = matched ? pickBetterName(matched.name, name) : name;
+
+            return {
+              id: t.id || uid(),
+              date: normalizeDateString(t.date || t.tanggal || t.Tanggal),
+              time: String(t.time || t.jam || t.Jam || t.waktu || '00:00'),
+              citizenId: matched ? matched.id : (t.citizenId || uid()),
+              name: finalName,
+              nik,
+              kk,
+              item: itemKey,
+              itemLabel: t.itemLabel || buildItemLabel(itemKey, qty),
+              qty
+            };
+          });
+
+          // Merge cleanly with existing records & ALWAYS overwrite generic "Warga" with real personal names
+          const cMap = new Map();
+          citizens.forEach(c => cMap.set(c.id, c));
+          normCitizens.forEach(c => {
+            const dup = Array.from(cMap.values()).find(ex =>
+              ex.id === c.id ||
+              (c.nik && c.nik.length === 16 && ex.nik === c.nik) ||
+              (c.kk && c.kk.length === 16 && ex.kk === c.kk)
+            );
+            if (dup) {
+              dup.name = pickBetterName(dup.name, c.name);
+              if (!dup.nik && c.nik) dup.nik = c.nik;
+              if (!dup.kk && c.kk) dup.kk = c.kk;
+            } else {
+              cMap.set(c.id, c);
+            }
+          });
+          citizens = Array.from(cMap.values());
+
+          const tMap = new Map();
+          transactions.forEach(t => tMap.set(t.id, t));
+          normTxs.forEach(t => {
+            const existingTx = tMap.get(t.id);
+            if (existingTx) {
+              t.name = pickBetterName(existingTx.name, t.name);
+            }
+            tMap.set(t.id, t);
+          });
+          transactions = Array.from(tMap.values()).sort((a, b) => {
+            const dCmp = String(b.date || '').localeCompare(String(a.date || ''));
+            return dCmp !== 0 ? dCmp : String(b.time || '').localeCompare(String(a.time || ''));
+          });
+
+          // Also update any matching transactions/citizens whose name was still "Warga"
+          autoHealWargaNames(false);
+          saveCitizensLocal();
+          saveTransactionsLocal();
+          refreshAllUI();
+          if (cloudConfig.dbUrl) {
+            pushAllLocalToCloud();
+          }
+          showToast(`✅ Berhasil memulihkan ${normCitizens.length} warga & ${normTxs.length} transaksi!`);
         } catch (err) {
-          showToast('Gagal membaca file JSON.', 'error');
+          console.error('Restore error:', err);
+          showToast('Gagal membaca isi file backup. Pastikan file tidak rusak.', 'error');
         }
       };
       reader.readAsText(file);
       event.target.value = '';
     }
 
+    function restoreFromCsvBackup(csvText) {
+      const lines = csvText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length < 2) {
+        showToast('File CSV kosong atau tidak memiliki baris data.', 'error');
+        return;
+      }
+      const sep = lines[0].includes(';') && !lines[0].includes(',') ? ';' : ',';
+      const parseLine = (line) => {
+        const out = [];
+        let cur = '';
+        let inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+            else { inQ = !inQ; }
+          } else if (ch === sep && !inQ) {
+            out.push(cur.trim());
+            cur = '';
+          } else {
+            cur += ch;
+          }
+        }
+        out.push(cur.trim());
+        return out;
+      };
+
+      const headerCols = parseLine(lines[0]).map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+      const hasHeader = headerCols.some(h =>
+        h.includes('nama') || h.includes('name') || h.includes('nik') || h.includes('kk') || h.includes('tanggal') || h.includes('komoditas')
+      );
+
+      const idxName = headerCols.findIndex(h => h.includes('nama') || h.includes('name') || h.includes('pembeli') || h.includes('warga'));
+      const idxNik = headerCols.findIndex(h => h.includes('nik'));
+      const idxKk = headerCols.findIndex(h => h === 'kk' || h.includes('nokk') || h.includes('nomorkk'));
+      const idxDate = headerCols.findIndex(h => h.includes('tanggal') || h.includes('tgl') || h.includes('date'));
+      const idxTime = headerCols.findIndex(h => h.includes('jam') || h.includes('waktu') || h.includes('time'));
+      const idxItem = headerCols.findIndex(h => h.includes('komoditas') || h.includes('barang') || h.includes('item') || h.includes('jenis'));
+      const idxQty = headerCols.findIndex(h => h.includes('jumlah') || h.includes('qty') || h.includes('banyak'));
+
+      const startRow = hasHeader ? 1 : 0;
+      const synthCitizens = [];
+      const synthTxs = [];
+
+      for (let i = startRow; i < lines.length; i++) {
+        const cols = parseLine(lines[i]);
+        if (cols.length < 2) continue;
+
+        let nameVal = idxName >= 0 ? (cols[idxName] || '') : '';
+        let nikVal = idxNik >= 0 ? cleanDigits(cols[idxNik] || '') : '';
+        let kkVal = idxKk >= 0 ? cleanDigits(cols[idxKk] || '') : '';
+
+        // Fallback smart column inference if headers weren't matched
+        if (!nameVal || !nikVal || !kkVal) {
+          cols.forEach((cell, cIdx) => {
+            const cleanCell = cell.replace(/^="?|"?$/g, '').trim();
+            const d = cleanDigits(cleanCell);
+            if (d.length === 16) {
+              if (!nikVal && cIdx !== idxKk) nikVal = d;
+              else if (!kkVal && cIdx !== idxNik) kkVal = d;
+            } else if (!nameVal && cleanCell && !/^\d{4}-\d{2}-\d{2}$/.test(cleanCell) && !/^\d{1,2}:\d{2}/.test(cleanCell) && !/^(minyak|gas|beras|lengkap|kurang)/i.test(cleanCell) && !isGenericWargaName(cleanCell)) {
+              nameVal = cleanCell;
+            }
+          });
+        }
+
+        nameVal = String(nameVal || '').replace(/^="?|"?$/g, '').trim() || 'Warga';
+
+        // If CSV is a Citizen-only list (no commodity/date columns)
+        if (idxItem < 0 && cols.length < 6) {
+          if (nikVal.length === 16 || kkVal.length === 16) {
+            synthCitizens.push({
+              name: nameVal,
+              nik: nikVal.length === 16 ? nikVal : '',
+              kk: kkVal.length === 16 ? kkVal : ''
+            });
+          }
+          continue;
+        }
+
+        const dateRaw = idxDate >= 0 ? cols[idxDate] : cols[0];
+        const timeRaw = idxTime >= 0 ? cols[idxTime] : (cols[1] || '00:00');
+        const komoditasRaw = idxItem >= 0 ? cols[idxItem] : (cols[5] || 'beras');
+        const qtyRaw = idxQty >= 0 ? cols[idxQty] : (cols[6] || '1');
+
+        synthTxs.push({
+          date: normalizeDateString(dateRaw),
+          time: timeRaw || '00:00',
+          name: nameVal,
+          nik: nikVal,
+          kk: kkVal,
+          komoditas: komoditasRaw || 'beras',
+          qty: Math.max(1, Number(cleanDigits(qtyRaw)) || 1)
+        });
+      }
+
+      if (synthCitizens.length === 0 && synthTxs.length === 0) {
+        showToast('Tidak ada baris data valid di dalam file CSV.', 'error');
+        return;
+      }
+
+      const blob = new Blob([JSON.stringify({ citizens: synthCitizens, transactions: synthTxs })], { type: 'application/json' });
+      restoreJSON({ target: { files: [new File([blob], 'csv_converted.json')], value: '' } });
+    }
+
     /* =====================================================================
-       LIVE CAMERA SCANNER (QR 250ms + FAST DIGIT-ONLY OCR)
+       LIVE CAMERA SCANNER (QR 280ms + FAST DIGIT-ONLY OCR)
     ===================================================================== */
     async function openScannerModal() {
       const modal = document.getElementById('scannerModal');
@@ -3018,14 +4891,21 @@
       }
 
       try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: currentFacingMode },
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          },
-          audio: false
-        });
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: currentFacingMode },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          });
+        } catch (firstErr) {
+          cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: currentFacingMode },
+            audio: false
+          });
+        }
         const video = document.getElementById('cameraVideo');
         video.srcObject = cameraStream;
         await video.play();
@@ -3033,7 +4913,7 @@
         startQrLiveLoop();
       } catch (err) {
         console.warn('Camera error:', err);
-        banner.textContent = '⚠️ Izin kamera belum aktif / dibuka offline. Gunakan tombol Galeri / Foto di bawah.';
+        banner.textContent = '⚠️ Izin kamera belum aktif. Gunakan tombol Galeri / Foto di bawah.';
       }
     }
 
@@ -3098,7 +4978,6 @@
 
     function handleDecodedQrPayload(rawPayload) {
       const text = String(rawPayload || '').trim();
-      // Format: KDKMP|NIK|KK|NAMA or plain 16 digits
       if (text.startsWith('KDKMP|')) {
         const parts = text.split('|');
         const nik = cleanDigits(parts[1] || '');
@@ -3118,7 +4997,8 @@
             createdAt: new Date().toISOString()
           };
           citizens.unshift(c);
-          saveCitizens();
+          saveCitizensLocal();
+          queueCloudSync('put', `citizens/${c.id}`, c);
         }
         closeScannerModal();
         if (c) {
@@ -3146,7 +5026,6 @@
           tessedit_pageseg_mode: '6'
         });
       } catch (e) {
-        console.warn('Tesseract warmup skipped (offline or blocked):', e);
         tesseractWorker = null;
       }
     }
@@ -3162,7 +5041,6 @@
       const vh = video.videoHeight;
 
       if (scanMode === 'line') {
-        // Crop only center target band for fast 1-second OCR
         const sx = Math.round(vw * 0.06);
         const sy = Math.round(vh * 0.36);
         const sw = Math.round(vw * 0.88);
@@ -3195,7 +5073,6 @@
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // First try QR detection on uploaded image
         if (typeof jsQR === 'function') {
           const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const qr = jsQR(imgData.data, canvas.width, canvas.height);
@@ -3212,13 +5089,11 @@
       event.target.value = '';
     }
 
-    // High-contrast grayscale enhancement to cut through blue e-KTP background
     function preprocessCanvasForOcr(canvas) {
       const ctx = canvas.getContext('2d');
       const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const d = imgData.data;
       for (let i = 0; i < d.length; i += 4) {
-        // Weight red channel heavily because blue e-KTP background has low red, dark ink has low red
         const lum = d[i] * 0.65 + d[i + 1] * 0.25 + d[i + 2] * 0.1;
         const enhanced = lum < 128 ? Math.max(0, lum * 0.7) : Math.min(255, lum * 1.25);
         d[i] = d[i + 1] = d[i + 2] = enhanced;
@@ -3266,7 +5141,6 @@
           `).join('');
         }
       } catch (err) {
-        console.error('OCR error:', err);
         banner.textContent = '⚠️ Gagal memproses gambar. Coba jepret ulang dengan cahaya lebih jelas.';
       } finally {
         isOcrBusy = false;
@@ -3274,7 +5148,6 @@
     }
 
     function extract16DigitCandidates(text) {
-      // Fix common OCR character misreads before extracting digits
       const normalized = String(text || '')
         .replace(/[OoQqDd]/g, '0')
         .replace(/[Il|!]/g, '1')
@@ -3284,14 +5157,12 @@
         .replace(/[Bb]/g, '8');
 
       const candidates = new Set();
-      // Match 16 continuous digits or grouped with spaces/dashes
       const matches = normalized.match(/(?:\d[\s-]*){16}/g) || [];
       matches.forEach(m => {
         const clean = m.replace(/\D/g, '');
         if (clean.length === 16) {
           candidates.add(clean);
         } else if (clean.length > 16) {
-          // Slide window for Indonesian province prefix (e.g. 32 for West Java)
           for (let i = 0; i <= clean.length - 16; i++) {
             const sub = clean.slice(i, i + 16);
             if (/^(1[1-9]|21|3[1-6]|5[1-3]|6[1-5]|7[1-6]|8[1-2]|9[1-4])/.test(sub)) {
@@ -3320,8 +5191,7 @@
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payload)}`;
 
       document.getElementById('qrCardName').textContent = c.name;
-      document.getElementById('qrCardIds').textContent =
-        `NIK: ${c.nik || '-'} | KK: ${c.kk || '-'}`;
+      document.getElementById('qrCardIds').textContent = `NIK: ${c.nik || '-'} | KK: ${c.kk || '-'}`;
       document.getElementById('qrCardImg').src = qrUrl;
       document.getElementById('qrCardModal').classList.add('open');
     }
@@ -3330,11 +5200,25 @@
       document.getElementById('qrCardModal').classList.remove('open');
     }
 
-    function downloadQrCardPng() {
+    async function downloadQrCardPng() {
       const img = document.getElementById('qrCardImg');
-      const name = document.getElementById('qrCardName').textContent || 'Warga';
-      window.open(img.src, '_blank');
-      showToast(`Gambar QR ${name} dibuka. Tekan & tahan gambar untuk menyimpan ke Galeri HP.`);
+      const name = (document.getElementById('qrCardName').textContent || 'Warga').replace(/[^a-zA-Z0-9_-]/g, '_');
+      try {
+        const resp = await fetch(img.src);
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Kartu_QR_${name}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(`📥 Kartu QR ${name} berhasil diunduh ke perangkat!`);
+      } catch (e) {
+        window.open(img.src, '_blank');
+        showToast(`Gambar QR dibuka. Tekan & tahan gambar untuk menyimpan ke Galeri.`);
+      }
     }
 
     /* =====================================================================
@@ -3357,15 +5241,78 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {
-          showToast('Gunakan menu Chrome (⋮) → Tambahkan ke layar utama untuk layar penuh otomatis.', 'warn');
-        });
-      } else {
-        document.exitFullscreen().catch(() => {});
+    let focusFullscreenFallback = false;
+
+    function isAnyFullscreenActive() {
+      return Boolean(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.msFullscreenElement ||
+        focusFullscreenFallback
+      );
+    }
+
+    function updateFullscreenUIState() {
+      const active = isAnyFullscreenActive();
+      document.body.classList.toggle('is-fullscreen', active);
+      const btn = document.getElementById('btnFullscreenToggle');
+      const icon = document.getElementById('fsBtnIcon');
+      const lbl = document.getElementById('fsBtnLabel');
+      if (btn && icon && lbl) {
+        btn.classList.toggle('fullscreen-active', active);
+        icon.textContent = active ? '✕' : '⛶';
+        lbl.textContent = active ? 'Keluar' : (window.innerWidth < 900 ? 'Full' : 'Layar Penuh');
       }
     }
+
+    function exitAnyFullscreen() {
+      focusFullscreenFallback = false;
+      const exitFn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if ((document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) && exitFn) {
+        try {
+          const p = exitFn.call(document);
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        } catch (e) {}
+      }
+      updateFullscreenUIState();
+    }
+
+    function toggleFullscreen() {
+      if (isAnyFullscreenActive()) {
+        exitAnyFullscreen();
+        return;
+      }
+
+      const el = document.documentElement;
+      const reqFn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+      if (reqFn) {
+        try {
+          const p = reqFn.call(el);
+          if (p && typeof p.then === 'function') {
+            p.then(() => {
+              updateFullscreenUIState();
+            }).catch(() => {
+              focusFullscreenFallback = true;
+              updateFullscreenUIState();
+              showToast('Mode Fokus aktif. Ketuk tombol merah "Keluar Layar Penuh" untuk kembali.');
+            });
+          } else {
+            updateFullscreenUIState();
+          }
+        } catch (e) {
+          focusFullscreenFallback = true;
+          updateFullscreenUIState();
+        }
+      } else {
+        focusFullscreenFallback = true;
+        updateFullscreenUIState();
+        showToast('Mode Fokus aktif. Ketuk tombol merah "Keluar Layar Penuh" untuk kembali.');
+      }
+    }
+
+    document.addEventListener('fullscreenchange', updateFullscreenUIState);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenUIState);
+    window.addEventListener('resize', updateFullscreenUIState);
 
     function showToast(msg, type = 'ok') {
       const container = document.getElementById('toastContainer');
@@ -3377,7 +5324,7 @@
         el.style.opacity = '0';
         el.style.transition = 'opacity 0.25s ease';
         setTimeout(() => el.remove(), 260);
-      }, 3200);
+      }, 3000);
     }
 
     function escapeHtml(str) {
@@ -3400,7 +5347,7 @@
       renderCitizenPanel();
       renderCommodities();
       renderRecentTransactions();
-      updateStickyMobileBanner();
+      updateSessionBars();
       if (document.getElementById('viewDb').style.display !== 'none') {
         renderDatabaseTab();
       }
@@ -3412,9 +5359,16 @@
       document.getElementById('txDateInput').value = selectedDateStr;
       document.getElementById('batchSphpDate').value = getYesterdayStr();
       updateDateToolbarUI();
+      updateFullscreenUIState();
       refreshAllUI();
       updateClock();
       setInterval(updateClock, 15000);
+
+      if (cloudConfig.dbUrl) {
+        startCloudRealtimeListener();
+      } else {
+        updateCloudBadgeUI('local', 'Mode Lokal');
+      }
     })();
   </script>
 </body>
