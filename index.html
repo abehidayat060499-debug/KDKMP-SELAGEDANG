@@ -1223,6 +1223,32 @@
       border-color: var(--excel-green);
     }
 
+        /* ================= TASTEFUL PROTECTED CREDIT WATERMARK ================= */
+    .app-credit-bar {
+      text-align: center;
+      font-size: 11px;
+      color: #64748B;
+      padding: 10px 12px 14px 12px;
+      letter-spacing: 0.15px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .app-credit-bar span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid #E2E8F0;
+      border-radius: 999px;
+      padding: 3px 11px;
+    }
+
+    .app-credit-bar strong {
+      color: #334155;
+      font-weight: 700;
+    }
+
     /* ================= MOBILE BOTTOM NAVIGATION BAR ================= */
     .mobile-bottom-nav {
       display: none;
@@ -1557,7 +1583,7 @@
 
       .mobile-bottom-nav {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         position: fixed;
         bottom: 0;
         left: 0;
@@ -1636,11 +1662,14 @@
     <div class="brand-area">
       <div class="excel-icon">X</div>
       <div class="brand-text">
-        <div class="brand-title">Kasir_Kuota_KDKMP.xlsx</div>
-        <div class="brand-sub">KDKMP Selagedang • Multi-Device POS</div>
+        <div class="brand-title" id="brandFileTitle">Kasir_Kuota_KDKMP.xlsx</div>
+        <div class="brand-sub" id="brandOrgSub" onclick="openPolicyModal()" style="cursor:pointer;" title="Klik untuk ubah nama koperasi & kuota SPHP">KDKMP Selagedang • Multi-Device POS</div>
       </div>
     </div>
     <div class="ribbon-actions">
+      <button type="button" class="btn-ribbon" id="sphpPolicyBtn" onclick="openPolicyModal()" title="Atur Batas Maksimal Kuota Beras SPHP per KK">
+        <span>🌾</span><span>SPHP: <strong id="ribbonSphpMax">5</strong></span>
+      </button>
       <button type="button" class="cloud-status-btn" id="cloudStatusBtn" onclick="openCloudModal()" title="Pengaturan Sinkronisasi Multi-Device">
         <span class="dot-status" id="cloudDot"></span>
         <span id="cloudStatusText">Mode Lokal</span>
@@ -1935,6 +1964,9 @@
       </div>
     </section>
 
+    <footer id="kdkmpCreditFooter" class="app-credit-bar" aria-label="Kredit Pembuat Aplikasi">
+      <span>Dibuat oleh <strong>Abdurrahman</strong> • Manager KDKMP Selagedang Cibeber</span>
+    </footer>
   </main>
 
   <!-- MOBILE BOTTOM NAVIGATION BAR (< 900px) -->
@@ -1942,10 +1974,6 @@
     <button type="button" class="bnav-btn active" id="bnavPos" onclick="switchView('pos')">
       <span class="bnav-icon">🧾</span>
       <span>Kasir POS</span>
-    </button>
-    <button type="button" class="bnav-btn" onclick="openScannerModal()">
-      <span class="bnav-icon">📷</span>
-      <span>Scan KTP/QR</span>
     </button>
     <button type="button" class="bnav-btn" id="bnavDb" onclick="switchView('db')">
       <span class="bnav-icon">🗂️</span>
@@ -2069,6 +2097,54 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL 1D: PENGATURAN KUOTA SPHP KOPERASI ==================== -->
+  <div class="modal-backdrop" id="policyModal">
+    <div class="modal-card" style="max-width:420px;">
+      <div class="modal-header">
+        <div style="font-weight:800; font-size:14px;">🌾 Kebijakan Kuota Beras SPHP Koperasi</div>
+        <button type="button" class="modal-close" onclick="closePolicyModal()">✕</button>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label"><span>Nama Koperasi / Gerai</span></label>
+          <input type="text" id="policyOrgNameInput" class="form-input" placeholder="Contoh: KDKMP Selagedang" />
+        </div>
+
+        <div style="background:#F0FDF4; border:1px solid #86EFAC; border-radius:8px; padding:10px; font-size:12.5px; color:#166534; margin-bottom:12px;">
+          Atur nama koperasi &amp; batas maksimal pembelian <strong>Beras SPHP (kemasan 5 kg)</strong> per Nomor KK dalam 1 minggu sesuai kebijakan masing-masing koperasi.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <span>Batas Maksimal SPHP per KK / Minggu</span>
+            <span id="policyKgPreview" style="color:var(--excel-green);">= 25 kg</span>
+          </label>
+          <div class="sphp-stepper" style="margin-bottom:8px;">
+            <button type="button" class="step-btn" onclick="changePolicySphpInput(-1)">−</button>
+            <input type="number" id="policySphpMaxInput" min="1" max="50" value="5" class="form-input mono-input" style="max-width:110px; text-align:center; font-size:18px;" oninput="previewPolicyKg()" />
+            <button type="button" class="step-btn" onclick="changePolicySphpInput(1)">+</button>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="setPolicyPreset(1)">1 Pack (5 kg)</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="setPolicyPreset(2)">2 Pack (10 kg)</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="setPolicyPreset(3)">3 Pack (15 kg)</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="setPolicyPreset(4)">4 Pack (20 kg)</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="setPolicyPreset(5)">5 Pack (25 kg)</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:14px;">
+          <button type="button" class="btn btn-green" style="flex:1; min-height:44px;" onclick="savePolicySettings()">
+            💾 Simpan Kebijakan Kuota
+          </button>
+          <button type="button" class="btn btn-outline" style="min-height:44px;" onclick="closePolicyModal()">
+            Batal
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== MODAL 2: MULTI-DEVICE CLOUD SYNC SETUP ==================== -->
   <div class="modal-backdrop" id="cloudModal">
     <div class="modal-card" style="max-width:540px;">
@@ -2118,54 +2194,34 @@
           </button>
         </div>
 
-        <!-- One-Tap Share Link for Staff Devices -->
-        <div id="shareWorkerBox" style="display:none; background:#ECFDF5; border:1.5px solid #86EFAC; border-radius:9px; padding:10px; margin-bottom:12px;">
-          <div style="font-weight:800; font-size:12.5px; color:#166534; margin-bottom:4px;">
-            📲 Link Otomatis untuk HP / Tablet Pekerja:
+        <!-- Share Links: Cloud Sync OR Local-Only (No Database Access) -->
+        <div id="shareLocalBox" style="background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:9px; padding:10px; margin-bottom:10px;">
+          <div style="font-weight:800; font-size:12.5px; color:#075985; margin-bottom:4px;">
+            🔒 Bagikan Link Mode Lokal (Tanpa Akses ke Database Cloud):
           </div>
-          <div style="font-size:11.5px; color:#15803D; margin-bottom:8px;">
-            Kirim link ini lewat WhatsApp ke pekerja toko. Begitu diklik, HP/Tablet pekerja langsung tersambung ke database yang sama tanpa perlu pengaturan manual!
+          <div style="font-size:11.5px; color:#0369A1; margin-bottom:8px;">
+            Koperasi lain tetap bisa memakai aplikasi ini dengan <strong>link database kosong (Mode Lokal)</strong>. Data mereka tersimpan mandiri di perangkat masing-masing dan tidak tercampur dengan database KDKMP Selagedang.
           </div>
-          <button type="button" class="btn btn-green btn-sm" style="width:100%;" onclick="copyWorkerMagicLink()">
-            📋 Salin Link Koneksi Otomatis (Kirim ke WA Pekerja)
+          <button type="button" class="btn btn-outline btn-sm" style="width:100%; border-color:#7DD3FC; color:#0369A1;" onclick="copyLocalOnlyLink()">
+            🔗 Salin Link Aplikasi Mode Lokal (Tanpa Database)
           </button>
         </div>
 
-        <!-- OPTION A: GOOGLE SHEETS (RECOMMENDED — NEVER BLOCKED IN INDONESIA) -->
-        <details open style="background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:8px; padding:10px 12px; font-size:12px; color:#1E293B; margin-bottom:8px;">
-          <summary style="font-weight:800; cursor:pointer; color:#166534;">
-            ✅ CARA PALING MUDAH &amp; ANTI GAGAL: Pakai Google Sheets (2 Menit)
-          </summary>
-          <div style="margin-top:8px; line-height:1.55;">
-            <p style="margin:0 0 6px 0;">Jika <strong>Firebase gagal diakses/diblokir jaringan</strong>, gunakan Google Sheets Anda sendiri. Data otomatis masuk ke tabel Spreadsheet dan tersinkron ke semua HP/Tablet:</p>
-            <ol style="margin:0 0 8px 0; padding-left:18px;">
-              <li>Buka <strong>sheets.google.com</strong> (atau <code>sheets.new</code>) lalu buat Spreadsheet kosong baru, beri nama misalnya <code>Database KDKMP Selagedang</code>.</li>
-              <li>Klik menu atas <strong>Ekstensi → Apps Script</strong>.</li>
-              <li>Hapus semua tulisan di editor, lalu ketuk tombol di bawah ini untuk menyalin kode siap pakai dan <strong>Tempel (Paste)</strong> ke editor Apps Script:</li>
-            </ol>
-            <button type="button" class="btn btn-green btn-sm" style="width:100%; margin-bottom:8px;" onclick="copyAppsScriptTemplate()">
-              📋 Salin Kode Google Apps Script (Siap Tempel)
-            </button>
-            <ol start="4" style="margin:0; padding-left:18px;">
-              <li>Klik tombol biru <strong>Terapkan (Deploy) → Deployment baru</strong>.</li>
-              <li>Klik ikon roda gigi ⚙️ di sebelah "Pilih jenis" → pilih <strong>Aplikasi Web (Web app)</strong>.</li>
-              <li>Pada bagian <strong>Yang memiliki akses (Who has access)</strong>, ubah menjadi <strong>Siapa saja (Anyone)</strong> → klik <strong>Terapkan (Deploy)</strong> → Izinkan akses akun Google Anda.</li>
-              <li>Salin <strong>URL Aplikasi Web</strong> (yang berakhiran <code>/exec</code>), lalu tempel ke kolom <strong>URL Server Database</strong> di atas!</li>
-            </ol>
+        <div id="shareWorkerBox" style="display:none; background:#ECFDF5; border:1.5px solid #86EFAC; border-radius:9px; padding:10px; margin-bottom:12px;">
+          <div style="font-weight:800; font-size:12.5px; color:#166534; margin-bottom:4px;">
+            📲 Link Otomatis untuk HP / Tablet Internal (Tersambung Database):
           </div>
-        </details>
+          <div style="font-size:11.5px; color:#15803D; margin-bottom:8px;">
+            Khusus tim internal toko Anda: begitu diklik, perangkat langsung tersambung ke database bersama yang sama.
+          </div>
+          <button type="button" class="btn btn-green btn-sm" style="width:100%;" onclick="copyWorkerMagicLink()">
+            📋 Salin Link Koneksi Database (Internal Tim)
+          </button>
+        </div>
 
-        <!-- OPTION B: FIREBASE TROUBLESHOOTING -->
-        <details style="background:#F8FAFC; border:1px solid var(--excel-border); border-radius:8px; padding:9px 11px; font-size:12px; color:#334155;">
-          <summary style="font-weight:800; cursor:pointer; color:#475569;">
-            🔥 Solusi Jika Tetap Ingin Memakai Firebase
-          </summary>
-          <ul style="margin:8px 0 0 0; padding-left:18px; line-height:1.55;">
-            <li><strong>Gagal buka console.firebase.google.com:</strong> Buka <em>Pengaturan HP → Jaringan &amp; Internet → DNS Pribadi</em>, ketik <code>dns.google</code> lalu simpan.</li>
-            <li><strong>Gagal saat Create Project:</strong> Matikan (geser ke kiri/OFF) pilihan <em>"Enable Google Analytics for this project"</em> agar pembuatan project tidak macet.</li>
-            <li><strong>Jangan salin link halaman Console:</strong> Link yang benar berakhiran <code>.firebasedatabase.app</code> (bukan <code>console.firebase.google.com/...</code>) dan harus memilih <strong>Start in test mode</strong>.</li>
-          </ul>
-        </details>
+        <div style="background:#F8FAFC; border:1px solid var(--excel-border); border-radius:8px; padding:9px 11px; font-size:12px; color:#475569; line-height:1.45;">
+          Tempel URL Web App Google Apps Script (<code>.../exec</code>) atau URL Realtime Database Firebase, pastikan <strong>Kode Toko / Gerai</strong> sama di semua perangkat, lalu tekan <strong>Hubungkan &amp; Sinkronkan</strong>.
+        </div>
       </div>
     </div>
   </div>
@@ -2228,7 +2284,7 @@
       </div>
       <div class="card-body" style="text-align:center;">
         <div id="qrCardPrintable" style="border:2px solid var(--excel-green); border-radius:12px; padding:16px; background:#FFFFFF;">
-          <div style="font-size:11px; font-weight:800; color:var(--excel-green); letter-spacing:0.5px;">KDKMP SELAGEDANG — KARTU KUOTA SEMBAKO</div>
+          <div id="qrCardOrgHeader" style="font-size:11px; font-weight:800; color:var(--excel-green); letter-spacing:0.5px;">KDKMP SELAGEDANG — KARTU KUOTA SEMBAKO</div>
           <div style="font-size:17px; font-weight:800; margin:6px 0 2px 0;" id="qrCardName">-</div>
           <div style="font-family:monospace; font-size:12px; color:#475569; margin-bottom:10px;" id="qrCardIds">-</div>
           <img id="qrCardImg" alt="QR Warga" style="width:190px; height:190px; border:1px solid #E2E8F0; border-radius:8px; padding:6px; background:#FFF;" />
@@ -2252,6 +2308,7 @@
     const STORAGE_TX = 'kdkmp_tx_v3';
     const STORAGE_CLOUD_CFG = 'kdkmp_cloud_cfg_v1';
     const STORAGE_PENDING_SYNC = 'kdkmp_pending_sync_v1';
+    const STORAGE_POLICY_CFG = 'kdkmp_policy_cfg_v1';
     const CHANNEL_NAME = 'kdkmp_pos_sync_v3';
 
     let citizens = [];
@@ -2259,6 +2316,8 @@
     let selectedCitizenId = null;
     let selectedDateStr = getTodayStr();
     let sphpQty = 1;
+    let sphpMaxPerWeek = 5;
+    let orgName = 'KDKMP Selagedang';
     let regMode = 'nik'; // 'nik' | 'kk'
     let dbFilter = 'all';
     let mobileNumpadVisible = true;
@@ -2297,7 +2356,7 @@
     }
 
     window.addEventListener('storage', (e) => {
-      if (e.key === STORAGE_CITIZENS || e.key === STORAGE_TX) {
+      if (e.key === STORAGE_CITIZENS || e.key === STORAGE_TX || e.key === STORAGE_POLICY_CFG) {
         loadFromStorage(false);
         refreshAllUI();
       }
@@ -2328,11 +2387,26 @@
           cloudConfig = Object.assign({ dbUrl: '', storeCode: 'kdkmp-selagedang' }, JSON.parse(rawCloud));
         }
 
-        // Check URL parameters (?db=...&toko=...) for 1-tap worker device onboarding
+        const rawPolicy = localStorage.getItem(STORAGE_POLICY_CFG);
+        if (rawPolicy) {
+          const parsedPol = JSON.parse(rawPolicy);
+          const val = parseInt(parsedPol && parsedPol.sphpMaxPerWeek, 10);
+          if (val >= 1 && val <= 50) sphpMaxPerWeek = val;
+          if (parsedPol && typeof parsedPol.orgName === 'string' && parsedPol.orgName.trim()) {
+            orgName = parsedPol.orgName.trim();
+          }
+        }
+
+        // Check URL parameters (?db=...&toko=... or ?mode=local)
         const params = new URLSearchParams(window.location.search);
+        const urlMode = (params.get('mode') || '').toLowerCase();
         const urlDb = params.get('db');
         const urlToko = params.get('toko');
-        if (urlDb) {
+        if (urlMode === 'local') {
+          cloudConfig.dbUrl = '';
+          localStorage.setItem(STORAGE_CLOUD_CFG, JSON.stringify(cloudConfig));
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (urlDb) {
           cloudConfig.dbUrl = normalizeFirebaseUrl(urlDb);
           if (urlToko) cloudConfig.storeCode = sanitizeStoreCode(urlToko);
           localStorage.setItem(STORAGE_CLOUD_CFG, JSON.stringify(cloudConfig));
@@ -3031,6 +3105,17 @@ function jsonOut_(obj) {
       }
     }
 
+    async function copyLocalOnlyLink() {
+      const basePage = window.location.origin + window.location.pathname;
+      const localUrl = `${basePage}?mode=local`;
+      try {
+        await navigator.clipboard.writeText(localUrl);
+        showToast('🔗 Link Mode Lokal (tanpa database) berhasil disalin!');
+      } catch (e) {
+        prompt('Salin link Mode Lokal (tanpa akses database) ini:', localUrl);
+      }
+    }
+
     async function copyWorkerMagicLink() {
       if (!cloudConfig.dbUrl) return;
       const basePage = window.location.origin + window.location.pathname;
@@ -3118,8 +3203,8 @@ function jsonOut_(obj) {
         gasMax: 1,
         gasRem: Math.max(0, 1 - gasUsed),
         riceUsed,
-        riceMax: 5,
-        riceRem: Math.max(0, 5 - riceUsed),
+        riceMax: sphpMaxPerWeek,
+        riceRem: Math.max(0, sphpMaxPerWeek - riceUsed),
         targetWeek
       };
     }
@@ -3712,7 +3797,7 @@ function jsonOut_(obj) {
 
     function changeSphpQty(delta) {
       const c = citizens.find(x => x.id === selectedCitizenId);
-      const q = c ? getQuotaStatusForCitizen(c, selectedDateStr) : { riceRem: 5 };
+      const q = c ? getQuotaStatusForCitizen(c, selectedDateStr) : { riceRem: sphpMaxPerWeek };
       const maxAllowed = Math.max(1, q.riceRem);
       sphpQty = Math.min(maxAllowed, Math.max(1, sphpQty + delta));
       renderCommodities();
@@ -3726,7 +3811,7 @@ function jsonOut_(obj) {
         container.innerHTML = `
           ${buildCommodityCardSkeleton('🛢️', 'Minyak Goreng (Minyakita)', '1 Liter / Hari per NIK', '1 Liter')}
           ${buildCommodityCardSkeleton('🔥', 'Gas LPG 3kg', '1 Tabung / Minggu per KK', '1 Tabung')}
-          ${buildCommodityCardSkeleton('🌾', 'Beras SPHP', '5 Pack / Minggu per KK', '5 Pack')}
+          ${buildCommodityCardSkeleton('🌾', 'Beras SPHP', `${sphpMaxPerWeek} Pack / Minggu per KK`, `${sphpMaxPerWeek} Pack`)}
         `;
         return;
       }
@@ -3775,7 +3860,7 @@ function jsonOut_(obj) {
         riceBtnHtml = `<button type="button" class="btn-tx btn-tx-locked" onclick="focusInlineComplete('kk')">🔒 Butuh No. KK (16 Digit)</button>`;
       } else if (q.riceRem <= 0) {
         riceCardClass += ' exhausted';
-        riceBtnHtml = `<button type="button" class="btn-tx btn-tx-disabled" disabled>✅ Sudah Diambil (5/5 Pack)</button>`;
+        riceBtnHtml = `<button type="button" class="btn-tx btn-tx-disabled" disabled>✅ Sudah Diambil (${q.riceUsed}/${q.riceMax} Pack)</button>`;
       } else {
         if (sphpQty > q.riceRem) sphpQty = q.riceRem;
         if (isRicePartial) {
@@ -3856,7 +3941,7 @@ function jsonOut_(obj) {
           <div>
             <div class="item-top">
               <span class="item-icon">🌾</span>
-              <span class="item-rule-badge">5 Pack / Minggu / KK</span>
+              <button type="button" class="item-rule-badge" style="border:1px solid #CBD5E1; cursor:pointer;" onclick="openPolicyModal()" title="Klik untuk ubah batas kuota SPHP">${q.riceMax} Pack / Minggu / KK ⚙️</button>
             </div>
             ${ricePartialBadgeHtml}
             <h4 class="item-name">Beras SPHP</h4>
@@ -3865,11 +3950,11 @@ function jsonOut_(obj) {
               <div class="quota-numbers">
                 <span style="font-size:11.5px; font-weight:700; color:#475569;">Sisa Kuota:</span>
                 <span class="quota-rem ${!hasKk ? 'muted' : (q.riceRem === 0 ? 'zero' : (isRicePartial ? 'partial' : ''))}">
-                  ${hasKk ? `${q.riceRem} / 5 Pack` : 'Terkunci'}
+                  ${hasKk ? `${q.riceRem} / ${q.riceMax} Pack` : 'Terkunci'}
                 </span>
               </div>
               <div class="progress-track">
-                <div class="progress-fill ${q.riceRem === 0 ? 'full' : (isRicePartial ? 'partial' : '')}" style="width:${hasKk ? (q.riceUsed / 5) * 100 : 0}%"></div>
+                <div class="progress-fill ${q.riceRem === 0 ? 'full' : (isRicePartial ? 'partial' : '')}" style="width:${hasKk ? Math.min(100, (q.riceUsed / Math.max(1, q.riceMax)) * 100) : 0}%"></div>
               </div>
             </div>
           </div>
@@ -4275,6 +4360,20 @@ function jsonOut_(obj) {
       renderDatabaseTab();
     }
 
+    function syncBatchSphpDropdown() {
+      const sel = document.getElementById('batchSphpQty');
+      if (!sel) return;
+      const prevVal = Number(sel.value || 1);
+      const maxOpt = Math.max(1, sphpMaxPerWeek);
+      let opts = '';
+      for (let i = 1; i <= maxOpt; i++) {
+        const maxTag = (i === maxOpt) ? ' - Maks' : '';
+        opts += `<option value="${i}">${i} Pack (${i * 5} kg${maxTag})</option>`;
+      }
+      sel.innerHTML = opts;
+      sel.value = String(Math.min(maxOpt, Math.max(1, prevVal)));
+    }
+
     function checkBatchSphpKk() {
       const input = document.getElementById('batchSphpKk');
       const kk = cleanDigits(input.value);
@@ -4288,10 +4387,10 @@ function jsonOut_(obj) {
           const q = getQuotaStatusForCitizen(existing, document.getElementById('batchSphpDate').value || getYesterdayStr());
           document.getElementById('batchSphpQuotaHint').textContent = `Terdaftar • Sisa: ${q.riceRem} Pack`;
         } else {
-          document.getElementById('batchSphpQuotaHint').textContent = `KK Baru • Sisa: 5 Pack`;
+          document.getElementById('batchSphpQuotaHint').textContent = `KK Baru • Sisa: ${sphpMaxPerWeek} Pack`;
         }
       } else {
-        document.getElementById('batchSphpQuotaHint').textContent = `Sisa: 5 Pack`;
+        document.getElementById('batchSphpQuotaHint').textContent = `Sisa: ${sphpMaxPerWeek} Pack`;
       }
     }
 
@@ -5342,7 +5441,84 @@ function jsonOut_(obj) {
       document.getElementById('clockBadge').textContent = `${hh}:${mm} WIB`;
     }
 
+    function updatePolicyUI() {
+      const safeSlug = String(orgName || 'KDKMP').trim().replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '') || 'KDKMP';
+      const titleEl = document.getElementById('brandFileTitle');
+      if (titleEl) titleEl.textContent = `Kasir_Kuota_${safeSlug}.xlsx`;
+      const subEl = document.getElementById('brandOrgSub');
+      if (subEl) subEl.textContent = `${orgName} • Multi-Device POS`;
+      const qrHdr = document.getElementById('qrCardOrgHeader');
+      if (qrHdr) qrHdr.textContent = `${orgName.toUpperCase()} — KARTU KUOTA SEMBAKO`;
+      document.title = `Kasir Kuota Sembako — ${orgName}`;
+
+      const rib = document.getElementById('ribbonSphpMax');
+      if (rib) rib.textContent = sphpMaxPerWeek;
+      const fx = document.getElementById('formulaStatus');
+      if (fx) {
+        fx.textContent = `=KUOTA_${safeSlug.toUpperCase()}(Minyak:"1L/Hari/NIK"; Gas_3kg:"1Tbg/Minggu/KK"; Beras_SPHP:"${sphpMaxPerWeek}Pack/Minggu/KK")`;
+      }
+      syncBatchSphpDropdown();
+      const kkInput = document.getElementById('batchSphpKk');
+      if (kkInput && kkInput.value.length !== 16) {
+        const hint = document.getElementById('batchSphpQuotaHint');
+        if (hint) hint.textContent = `Sisa: ${sphpMaxPerWeek} Pack`;
+      }
+    }
+
+    function openPolicyModal() {
+      const orgInp = document.getElementById('policyOrgNameInput');
+      if (orgInp) orgInp.value = orgName;
+      const inp = document.getElementById('policySphpMaxInput');
+      if (inp) inp.value = sphpMaxPerWeek;
+      previewPolicyKg();
+      document.getElementById('policyModal').classList.add('open');
+    }
+
+    function closePolicyModal() {
+      document.getElementById('policyModal').classList.remove('open');
+    }
+
+    function previewPolicyKg() {
+      const inp = document.getElementById('policySphpMaxInput');
+      const val = Math.max(1, Math.min(50, parseInt(inp.value, 10) || 1));
+      const lbl = document.getElementById('policyKgPreview');
+      if (lbl) lbl.textContent = `= ${val * 5} kg / KK / Minggu`;
+    }
+
+    function changePolicySphpInput(delta) {
+      const inp = document.getElementById('policySphpMaxInput');
+      const cur = parseInt(inp.value, 10) || sphpMaxPerWeek;
+      inp.value = Math.max(1, Math.min(50, cur + delta));
+      previewPolicyKg();
+    }
+
+    function setPolicyPreset(val) {
+      const inp = document.getElementById('policySphpMaxInput');
+      inp.value = val;
+      previewPolicyKg();
+    }
+
+    function savePolicySettings() {
+      const orgInp = document.getElementById('policyOrgNameInput');
+      const nextOrg = (orgInp ? orgInp.value : '').trim() || 'KDKMP Selagedang';
+      const inp = document.getElementById('policySphpMaxInput');
+      const val = parseInt(inp.value, 10);
+      if (!val || val < 1 || val > 50) {
+        showToast('Masukkan batas kuota SPHP antara 1 sampai 50 pack.', 'error');
+        return;
+      }
+      orgName = nextOrg;
+      sphpMaxPerWeek = val;
+      if (sphpQty > sphpMaxPerWeek) sphpQty = sphpMaxPerWeek;
+      localStorage.setItem(STORAGE_POLICY_CFG, JSON.stringify({ sphpMaxPerWeek, orgName }));
+      notifyLocalTabs();
+      closePolicyModal();
+      refreshAllUI();
+      showToast(`✅ Disimpan (${orgName}): Kuota SPHP maks ${sphpMaxPerWeek} Pack (${sphpMaxPerWeek * 5} kg) / KK / Minggu.`);
+    }
+
     function refreshAllUI() {
+      updatePolicyUI();
       document.getElementById('tabDbCount').textContent = citizens.length;
       renderCitizenPanel();
       renderCommodities();
@@ -5369,7 +5545,37 @@ function jsonOut_(obj) {
       } else {
         updateCloudBadgeUI('local', 'Mode Lokal');
       }
+
+      initCreditWatermarkGuard();
     })();
+
+    function initCreditWatermarkGuard() {
+      const CREDIT_HTML = '<span>Dibuat oleh <strong>Abdurrahman</strong> • Manager KDKMP Selagedang Cibeber</span>';
+      const ensureCredit = () => {
+        const mainEl = document.querySelector('main.main-wrap');
+        if (!mainEl) return;
+        let ft = document.getElementById('kdkmpCreditFooter');
+        if (!ft) {
+          ft = document.createElement('footer');
+          ft.id = 'kdkmpCreditFooter';
+          ft.className = 'app-credit-bar';
+          ft.setAttribute('aria-label', 'Kredit Pembuat Aplikasi');
+          mainEl.appendChild(ft);
+        }
+        if (ft.innerHTML.trim() !== CREDIT_HTML) {
+          ft.innerHTML = CREDIT_HTML;
+        }
+        ft.style.setProperty('display', 'block', 'important');
+        ft.style.setProperty('visibility', 'visible', 'important');
+        ft.style.setProperty('opacity', '1', 'important');
+      };
+      ensureCredit();
+      if ('MutationObserver' in window) {
+        const obs = new MutationObserver(() => ensureCredit());
+        obs.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
+      }
+      setInterval(ensureCredit, 3000);
+    }
   </script>
 </body>
 </html>
